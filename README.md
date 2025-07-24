@@ -49,7 +49,7 @@ python mbbq.py -mode detect_answers -subsets Age Disability_status Gender_identi
 
 ## Citation
 If you use the code in this repository, please cite the following paper:
-```
+```bibtex
 @inproceedings{
 neplenbroek2024mbbq,
 title={{MBBQ}: A Dataset for Cross-Lingual Comparison of Stereotypes in Generative {LLM}s},
@@ -58,4 +58,3 @@ booktitle={First Conference on Language Modeling},
 year={2024},
 url={https://openreview.net/forum?id=X9yV4lFHt4}
 }
-```
