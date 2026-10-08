@@ -17,7 +17,13 @@ import datasets
 import datasets.fingerprint
 import huggingface_hub
 import torch
+import transformers
 from transformers.pipelines.pt_utils import KeyDataset
+
+# generate() logs "Setting `pad_token_id` to `eos_token_id`" once per batch
+# (~25k lines per model), which bloats the Colab output. It is only a notice:
+# that padding is what happens either way.
+transformers.logging.set_verbosity_error()
 
 # ask_model's dataset.map(lambda x: process(model, x)) makes datasets
 # fingerprint the lambda by pickling it into memory, closure included: the
