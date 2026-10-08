@@ -80,7 +80,7 @@ def check_gpu():
 def resolve_model(hf_model, revision, info):
     from huggingface_hub import model_info, snapshot_download
     sha = model_info(hf_model, revision=revision).sha
-    if info.get("revision") not in (None, sha):
+    if info["results"] and info.get("revision") not in (None, sha):
         sys.exit(f"Earlier runs used commit {info['revision']}, "
                  f"but {revision or 'main'} is {sha}. "
                  f"Pass --revision {info['revision']} to keep runs comparable.")
