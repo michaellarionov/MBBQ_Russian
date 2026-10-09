@@ -9,12 +9,12 @@ rerun. get_samples is deterministic, so the per-subset pickles concatenate to
 the same rows as one all-subsets run; this is checked against a fresh
 generate_samples before anything is written to --results_dir.
 
-The generation settings are stamped into --work_dir and --results_dir. A rerun
-resumes only under identical settings; files from a run with other settings
-(e.g. upstream ask_model's 100 tokens) stop the script instead of being reused.
+The generation settings are stamped into --work_dir. A rerun resumes only
+under identical settings; files from a run with other settings (e.g. upstream
+ask_model's 100 tokens) stop the script instead of being reused.
 
 Output: <results_dir>/<key>_<lang>[_control].pkl (what reproduce_table3.py
-reads) and <key>_runinfo.json (settings, versions, timings).
+reads).
 
 Log in to Hugging Face first (huggingface-cli login or HF_TOKEN).
 
@@ -26,7 +26,6 @@ import argparse
 import json
 import os
 import pickle
-import platform
 import subprocess
 import sys
 import time
@@ -78,12 +77,8 @@ def check_gpu():
     return torch.cuda.get_device_name()
 
 
-def check_settings(work, key, settings, info):
+def check_settings(work, key, settings):
     """Refuse to resume from files written under other generation settings."""
-    if info and info.get("settings") != settings:
-        sys.exit(f"{key}_runinfo.json in --results_dir is from a run with other "
-                 f"generation settings ({info.get('settings', 'none recorded')}). "
-                 "Use a fresh --results_dir or delete the old outputs.")
     stamp = work / f"{key}_settings.json"
     if stamp.exists():
         if json.loads(stamp.read_text()) != settings:
@@ -101,21 +96,21 @@ def check_settings(work, key, settings, info):
 class Asker:
     """Loads the pinned model on first use, then keeps it for every subset."""
 
-    def __init__(self, cfg, bs, info):
-        self.cfg, self.bs, self.info, self.pipe = cfg, bs, info, None
+    def __init__(self, cfg, bs):
+        self.cfg, self.bs, self.pipe = cfg, bs, None
 
     def __call__(self, questions):
         import ask_model_paper
         if self.pipe is None:
             from huggingface_hub import snapshot_download
-            self.info.setdefault("gpu", check_gpu())
+            print(f"GPU: {check_gpu()}")
             path = snapshot_download(self.cfg["hf_model"], revision=self.cfg["revision"],
                                      allow_patterns=WEIGHTS)
             self.pipe = ask_model_paper.load_model(path)
         return ask_model_paper.ask(self.pipe, self.cfg, questions, self.bs)
 
 
-def run_one(args, lang, control, asker, info):
+def run_one(args, lang, control, asker):
     tag = f"{args.key}_{lang}{'_control' if control else ''}"
     out = Path(args.results_dir) / f"{tag}.pkl"
     if out.exists():
@@ -133,7 +128,6 @@ def run_one(args, lang, control, asker, info):
             df["answer"] = asker(df["question"].tolist())
             secs = round(time.time() - t0)
             dump_atomic(df, pkl)
-            info["ask_seconds"][f"{tag}/{subset}"] = secs
             print(f"[{tag}] {subset}: generation took {secs / 3600:.2f} h")
         mbbq(work, "detect_answers", lang, exp_id, control, [subset])
         parts.append(load(pkl))
@@ -151,9 +145,6 @@ def run_one(args, lang, control, asker, info):
 
     undetected = float(merged["answer_detected"].isna().mean())
     dump_atomic(merged, out)
-    info["results"][tag] = dict(rows=len(merged), undetected=round(undetected, 4),
-                                subsets=args.subsets,
-                                finished=time.strftime("%Y-%m-%d %H:%M:%S"))
     print(f"[{tag}] wrote {out} ({len(merged)} rows, {undetected:.1%} undetected)")
 
 
@@ -187,23 +178,15 @@ def main():
     if not (work / "data").exists():
         (work / "data").symlink_to(ROOT / "data")
 
-    info_path = results / f"{args.key}_runinfo.json"
-    info = json.loads(info_path.read_text()) if info_path.exists() else {}
-    check_settings(work, args.key, settings, info)
-    info.update(settings=settings, transformers=transformers.__version__,
-                torch=torch.__version__, python=platform.python_version())
-    info.setdefault("results", {})
-    info.setdefault("ask_seconds", {})
+    check_settings(work, args.key, settings)
     print(f"{cfg['hf_model']} @ {cfg['revision']}: "
-          f"max_new_tokens={cfg['max_new_tokens']}, bs={bs}")
+          f"max_new_tokens={cfg['max_new_tokens']}, bs={bs}; "
+          f"transformers {transformers.__version__}, torch {torch.__version__}")
 
-    asker = Asker(cfg, bs, info)
-    try:
-        for lang in args.langs:
-            for control in [False] if args.no_control else [False, True]:
-                run_one(args, lang, control, asker, info)
-    finally:
-        info_path.write_text(json.dumps(info, indent=2))
+    asker = Asker(cfg, bs)
+    for lang in args.langs:
+        for control in [False] if args.no_control else [False, True]:
+            run_one(args, lang, control, asker)
 
 
 if __name__ == "__main__":

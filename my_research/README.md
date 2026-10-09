@@ -19,8 +19,8 @@ Russian extension of MBBQ. Upstream files are untouched; all work lives here.
   - `run_step6.py` runs one subset at a time and resumes after disconnects. It
     loads the pinned model once, checks the merged rows against a full
     `generate_samples`, and won't save outputs without answers. It stamps the
-    generation settings into its output folders and stops rather than reuse
-    files made with other settings.
+    generation settings into its work folder (`<key>_settings.json`) and stops
+    rather than reuse files made with other settings.
 - `templates/`: Russian templates and slot lexicon
 - `results/`: renamed `mbbq.py` pickles, `<model>_<lang>[_control].pkl`
 
@@ -46,3 +46,21 @@ The pinned revisions' chat templates render exactly these prompt strings.
 | Prompt | `<s>[INST] {q} [/INST]` | `<\|user\|>\n{q}</s>\n<\|assistant\|>\n` |
 | `max_new_tokens` | 1000 | 256 |
 | Batch size | 16 | 32 |
+
+## Run record
+
+### Mistral (Oct 2026, Colab, `MyDrive/mbbq_paper`)
+
+Status: en, en_control, nl, nl_control done; es and tr running (2026-10-09).
+Every output is generated with the settings above: `mistralai/Mistral-7B-Instruct-v0.2` at the pinned commit,
+`max_new_tokens=1000`, batch size 16, on an NVIDIA A100-SXM4-40GB in every
+session. `run_step6.py` refuses to resume under other settings, so no output
+mixes settings.
+
+| | Value |
+|---|---|
+| `transformers` | 4.39.3 (pinned by the notebook) |
+| `torch` | 2.11.0+cu130, Colab's default, not the 2.2.2 in `requirements.txt`; may cause small numerical differences under greedy decoding |
+| Python | 3.13 |
+
+Per-file row counts and undetected rates come from the pickles.
