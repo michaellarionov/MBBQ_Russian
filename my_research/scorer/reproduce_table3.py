@@ -12,7 +12,8 @@ import argparse
 import itertools
 from pathlib import Path
 
-from mbbq_scorer import annotate, attach_polarity, load_outputs, score, template_filter
+from mbbq_scorer import (PAPER_AMBIGUITIES, annotate, attach_polarity, load_outputs,
+                         score, template_filter)
 
 # Table 3 [arXiv 2406.07243v3]. Accuracies in %, bias as fractions.
 TABLE3 = {
@@ -36,9 +37,9 @@ ACC_TOL, BIAS_TOL = 2.0, 0.01  # percentage points, fraction
 
 
 def load(results, data, model, lang, control):
+    """Outputs with question polarity, not yet annotated (bias_def is swept)."""
     name = f"{model}_{lang}{'_control' if control else ''}.pkl"
-    df = load_outputs(Path(results) / name)
-    return annotate(attach_polarity(df, data, lang, control=control))
+    return attach_polarity(load_outputs(Path(results) / name), data, lang, control=control)
 
 
 def compare(s, t):
@@ -65,21 +66,28 @@ def main():
     args = ap.parse_args()
     target = TABLE3[args.model]
 
-    main_sets = {l: load(args.results, args.data, args.model, l, False) for l in LANGS}
-    control_sets = {l: load(args.results, args.data, args.model, l, True) for l in LANGS}
-    filters = {"main": template_filter(main_sets), "control": template_filter(control_sets)}
+    raw = {l: load(args.results, args.data, args.model, l, False) for l in LANGS}
+    main_sets = {b: {l: annotate(df, bias_def=b) for l, df in raw.items()}
+                 for b in PAPER_AMBIGUITIES["bias_def"]}
+    control_sets = {l: annotate(load(args.results, args.data, args.model, l, True))
+                    for l in LANGS}
+    # The filter uses accuracy only, so bias_def does not affect it.
+    filters = {"main": template_filter(main_sets["flip"]),
+               "control": template_filter(control_sets)}
 
+    keys = ("bias_def", "filter_on", "bias_d", "average")
     combos = []
-    for filter_on, bias_d, average in itertools.product(
-            ["control", "main"], ["count", "acc_diff"], ["prompt_mean", "pooled"]):
+    for bias_def, filter_on, bias_d, average in itertools.product(
+            PAPER_AMBIGUITIES["bias_def"], PAPER_AMBIGUITIES["filter_on"],
+            PAPER_AMBIGUITIES["bias_d"], PAPER_AMBIGUITIES["average"]):
         keep = filters[filter_on]
         per_lang = {}
         for lang in LANGS:
-            s = score(main_sets[lang], bias_d=bias_d, average=average, templates=keep)
+            s = score(main_sets[bias_def][lang], bias_d=bias_d, average=average, templates=keep)
             err, ok = compare(s, target[lang])
             per_lang[lang] = (s, err, ok)
-        combos.append(dict(filter_on=filter_on, bias_d=bias_d, average=average,
-                           n=len(keep), langs=per_lang,
+        combos.append(dict(bias_def=bias_def, filter_on=filter_on, bias_d=bias_d,
+                           average=average, n=len(keep), langs=per_lang,
                            en_err=per_lang["en"][1],
                            all_err=sum(v[1] for v in per_lang.values())))
 
@@ -87,12 +95,11 @@ def main():
     print("\nAll switch combinations, ranked by English error (primary gate):")
     for c in sorted(combos, key=lambda c: c["en_err"]):
         print(f"  en_err={c['en_err']:6.2f} all_err={c['all_err']:7.2f} "
-              f"filter_on={c['filter_on']:7s} bias_d={c['bias_d']:8s} "
-              f"average={c['average']:11s} #T={c['n']}")
+              f"bias_def={c['bias_def']:7s} filter_on={c['filter_on']:7s} "
+              f"bias_d={c['bias_d']:8s} average={c['average']:13s} #T={c['n']}")
 
     best = min(combos, key=lambda c: c["en_err"])
-    print(f"\nBest by English: filter_on={best['filter_on']} bias_d={best['bias_d']} "
-          f"average={best['average']} #T={best['n']}")
+    print("\nBest by English: " + " ".join(f"{k}={best[k]}" for k in keys) + f" #T={best['n']}")
     for lang in LANGS:
         s, err, ok = best["langs"][lang]
         role = "PRIMARY " if lang == "en" else "required"
@@ -102,7 +109,7 @@ def main():
               f"acc_D={t['acc_D']:5.1f} bias_D={t['bias_D']:7.4f}")
 
     best_all = min(combos, key=lambda c: c["all_err"])
-    same = all(best[k] == best_all[k] for k in ("filter_on", "bias_d", "average"))
+    same = all(best[k] == best_all[k] for k in keys)
     print(f"\nSame combination wins on all-language error: {'yes' if same else 'NO'}")
     gate = (best["n"] == target["n_templates"]
             and all(best["langs"][l][2] for l in LANGS))

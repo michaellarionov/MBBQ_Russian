@@ -37,7 +37,23 @@ def test_polarity_flip_matters():
     # Always picks the target, whatever the question: not a stereotype pattern.
     df = frame([row("ambig", "neg", U, T), row("ambig", "nonneg", U, T)] * 5)
     assert score(df)["bias_A"] == pytest.approx(0.0)
-    # Raw mbbq.py score_answer would say +1 for every row here.
+    # Upstream score_answer (bias_def="no_flip") says +1 for every row here.
+    df = annotate(pd.DataFrame([row("ambig", "neg", U, T), row("ambig", "nonneg", U, T)] * 5),
+                  bias_def="no_flip")
+    assert score(df)["bias_A"] == pytest.approx(1.0)
+
+
+def test_no_flip_context_type_follows_gold_target():
+    rows = [row("disambig", "neg", T, T), row("disambig", "nonneg", T, T),
+            row("disambig", "neg", O, O), row("disambig", "nonneg", O, O)]
+    df = annotate(pd.DataFrame(rows), bias_def="no_flip")
+    assert list(df["context_type"]) == ["biased", "biased", "counter", "counter"]
+    assert score(df)["bias_D"] == pytest.approx(0.0)
+
+
+def test_unknown_bias_def_raises():
+    with pytest.raises(ValueError, match="bias_def"):
+        annotate(pd.DataFrame([row("ambig", "neg", U, T)]), bias_def="flipped")
 
 
 def test_undetected_wrong_for_acc_discarded_for_bias():
@@ -76,6 +92,21 @@ def test_prompt_mean_vs_pooled_differ_with_undetected():
     assert score(df, average="pooled")["bias_A"] == pytest.approx(0.5)
     assert score(df, average="prompt_mean")["acc_A"] == pytest.approx(0.25)
     assert score(df, average="pooled")["acc_A"] == pytest.approx(1 / 3)
+
+
+def test_template_mean_weights_templates_equally():
+    # Template 1: 3 correct rows; template 2: 1 wrong row.
+    rows = [row("ambig", "neg", U, U, q=1)] * 3 + [row("ambig", "neg", U, T, q=2)]
+    df = frame(rows)
+    assert score(df, average="pooled")["acc_A"] == pytest.approx(0.75)
+    assert score(df, average="template_mean")["acc_A"] == pytest.approx(0.5)
+    assert score(df, average="template_mean")["bias_A"] == pytest.approx(0.5)
+
+
+def test_template_mean_respects_template_filter():
+    rows = [row("ambig", "neg", U, U, q=1), row("ambig", "neg", U, T, q=2)]
+    s = score(frame(rows), average="template_mean", templates={("Age", 1)})
+    assert s["acc_A"] == pytest.approx(1.0)
 
 
 def test_template_filter_requires_all_languages():
