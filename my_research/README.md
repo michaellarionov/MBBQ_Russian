@@ -51,7 +51,10 @@ The pinned revisions' chat templates render exactly these prompt strings.
 
 ### Mistral (Oct 2026, Colab, `MyDrive/mbbq_paper`)
 
-Status: en, en_control, nl, nl_control done; es and tr running (2026-10-09).
+Status: all 8 subsets done (en, nl, es, tr, each main + control; 2026-10-10).
+Table 3 gate run 2026-10-10: all 4 languages within tolerance with
+`bias_def=no_flip, filter_on=control, bias_d=count, average=template_mean`;
+gate still FAILs on #T (57 vs. the paper's 56). Not frozen until Zephyr confirms.
 Every output is generated with the settings above: `mistralai/Mistral-7B-Instruct-v0.2` at the pinned commit,
 `max_new_tokens=1000`, batch size 16, on an NVIDIA A100-SXM4-40GB in every
 session. `run_step6.py` refuses to resume under other settings, so no output
