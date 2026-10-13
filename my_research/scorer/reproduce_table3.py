@@ -1,19 +1,17 @@
-"""Sweep the scorer switches against MBBQ Table 3 in all four languages.
+"""Score the frozen MBBQ method against Table 3 in all four languages.
 
 Usage (from the fork root):
   python my_research/scorer/reproduce_table3.py --model mistral \
       --results my_research/results --data data
 Expects pickles named <model>_<lang>[_control].pkl for en, nl, es, tr.
 
-English is the primary gate: switch combinations are ranked by their English
-error. nl, es and tr are a required check on the best combination.
+Prints our scores next to the paper's, the deviation of each metric, the
+largest deviations, and the template count (#T) against the paper's.
 """
 import argparse
-import itertools
 from pathlib import Path
 
-from mbbq_scorer import (PAPER_AMBIGUITIES, annotate, attach_polarity, load_outputs,
-                         score, template_filter)
+from mbbq_scorer import annotate, attach_polarity, load_outputs, score, template_filter
 
 # Table 3 [arXiv 2406.07243v3]. Accuracies in %, bias as fractions.
 TABLE3 = {
@@ -33,29 +31,13 @@ TABLE3 = {
     },
 }
 LANGS = ["en", "nl", "es", "tr"]
-ACC_TOL, BIAS_TOL = 2.0, 0.01  # percentage points, fraction
+METRICS = ("acc_A", "bias_A", "acc_D", "bias_D")
 
 
 def load(results, data, model, lang, control):
-    """Outputs with question polarity, not yet annotated (bias_def is swept)."""
     name = f"{model}_{lang}{'_control' if control else ''}.pkl"
-    return attach_polarity(load_outputs(Path(results) / name), data, lang, control=control)
-
-
-def compare(s, t):
-    """Error in tolerance units, and whether every metric is within tolerance."""
-    diffs = {
-        "acc_A": abs(100 * s["acc_A"] - t["acc_A"]) / ACC_TOL,
-        "bias_A": abs(s["bias_A"] - t["bias_A"]) / BIAS_TOL,
-        "acc_D": abs(100 * s["acc_D"] - t["acc_D"]) / ACC_TOL,
-        "bias_D": abs(s["bias_D"] - t["bias_D"]) / BIAS_TOL,
-    }
-    return sum(diffs.values()), all(d <= 1 for d in diffs.values())
-
-
-def fmt(s):
-    return (f"acc_A={100*s['acc_A']:5.1f} bias_A={s['bias_A']:7.4f} "
-            f"acc_D={100*s['acc_D']:5.1f} bias_D={s['bias_D']:7.4f}")
+    return annotate(attach_polarity(load_outputs(Path(results) / name), data, lang,
+                                    control=control))
 
 
 def main():
@@ -66,54 +48,24 @@ def main():
     args = ap.parse_args()
     target = TABLE3[args.model]
 
-    raw = {l: load(args.results, args.data, args.model, l, False) for l in LANGS}
-    main_sets = {b: {l: annotate(df, bias_def=b) for l, df in raw.items()}
-                 for b in PAPER_AMBIGUITIES["bias_def"]}
-    control_sets = {l: annotate(load(args.results, args.data, args.model, l, True))
-                    for l in LANGS}
-    # The filter uses accuracy only, so bias_def does not affect it.
-    filters = {"main": template_filter(main_sets["flip"]),
-               "control": template_filter(control_sets)}
-
-    keys = ("bias_def", "filter_on", "bias_d", "average")
-    combos = []
-    for bias_def, filter_on, bias_d, average in itertools.product(
-            PAPER_AMBIGUITIES["bias_def"], PAPER_AMBIGUITIES["filter_on"],
-            PAPER_AMBIGUITIES["bias_d"], PAPER_AMBIGUITIES["average"]):
-        keep = filters[filter_on]
-        per_lang = {}
-        for lang in LANGS:
-            s = score(main_sets[bias_def][lang], bias_d=bias_d, average=average, templates=keep)
-            err, ok = compare(s, target[lang])
-            per_lang[lang] = (s, err, ok)
-        combos.append(dict(bias_def=bias_def, filter_on=filter_on, bias_d=bias_d,
-                           average=average, n=len(keep), langs=per_lang,
-                           en_err=per_lang["en"][1],
-                           all_err=sum(v[1] for v in per_lang.values())))
-
-    print(f"Model: {args.model}   target #T = {target['n_templates']}")
-    print("\nAll switch combinations, ranked by English error (primary gate):")
-    for c in sorted(combos, key=lambda c: c["en_err"]):
-        print(f"  en_err={c['en_err']:6.2f} all_err={c['all_err']:7.2f} "
-              f"bias_def={c['bias_def']:7s} filter_on={c['filter_on']:7s} "
-              f"bias_d={c['bias_d']:8s} average={c['average']:13s} #T={c['n']}")
-
-    best = min(combos, key=lambda c: c["en_err"])
-    print("\nBest by English: " + " ".join(f"{k}={best[k]}" for k in keys) + f" #T={best['n']}")
+    keep = template_filter({l: load(args.results, args.data, args.model, l, True)
+                            for l in LANGS})
+    print(f"Model: {args.model}   #T = {len(keep)} (paper: {target['n_templates']})")
+    worst = {"acc": (0.0, ""), "bias": (0.0, "")}
     for lang in LANGS:
-        s, err, ok = best["langs"][lang]
-        role = "PRIMARY " if lang == "en" else "required"
-        print(f"  {lang} [{role}] {'PASS' if ok else 'FAIL'}  err={err:5.2f}  ours: {fmt(s)}")
+        s = score(load(args.results, args.data, args.model, lang, False), templates=keep)
         t = target[lang]
-        print(f"  {' ' * 26}paper: acc_A={t['acc_A']:5.1f} bias_A={t['bias_A']:7.4f} "
-              f"acc_D={t['acc_D']:5.1f} bias_D={t['bias_D']:7.4f}")
-
-    best_all = min(combos, key=lambda c: c["all_err"])
-    same = all(best[k] == best_all[k] for k in keys)
-    print(f"\nSame combination wins on all-language error: {'yes' if same else 'NO'}")
-    gate = (best["n"] == target["n_templates"]
-            and all(best["langs"][l][2] for l in LANGS))
-    print(f"GATE: {'PASS' if gate else 'FAIL'} (#T match and all 4 languages within tolerance)")
+        ours = {m: 100 * s[m] if m.startswith("acc") else s[m] for m in METRICS}
+        dev = {m: ours[m] - t[m] for m in METRICS}
+        print(f"\n  {lang}  ours:  " + "  ".join(f"{m}={ours[m]:8.4f}" for m in METRICS))
+        print("      paper: " + "  ".join(f"{m}={t[m]:8.4f}" for m in METRICS))
+        print("      dev:   " + "  ".join(f"{m}={dev[m]:+8.4f}" for m in METRICS))
+        for m in METRICS:
+            kind = m.split("_")[0]
+            if abs(dev[m]) > worst[kind][0]:
+                worst[kind] = (abs(dev[m]), f"{lang} {m}")
+    print(f"\nLargest accuracy deviation: {worst['acc'][0]:.2f} points ({worst['acc'][1]})")
+    print(f"Largest bias deviation:     {worst['bias'][0]:.4f} ({worst['bias'][1]})")
 
 
 if __name__ == "__main__":
