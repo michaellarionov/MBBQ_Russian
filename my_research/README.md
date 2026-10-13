@@ -2,9 +2,9 @@
 
 Russian extension of MBBQ. Upstream files are untouched; all work lives here.
 
-- `scorer/`: scorer (`mbbq_scorer.py`), unit tests, Table 3 reproduction sweep
-  (`reproduce_table3.py`: ranks the switch combinations by English error, then
-  requires nl, es and tr within tolerance under the same combination)
+- `scorer/`: scorer (`mbbq_scorer.py`, the frozen method below), unit tests,
+  Table 3 check (`reproduce_table3.py`: scores en, nl, es and tr against the
+  paper and prints each deviation and the largest ones)
 - `generation/`: step 6, producing model outputs (run `colab_step6.ipynb` on an A100)
   - `ask_model_paper.py` asks the model with the paper-era settings from the
     authors' `models.py` (commit `20ae39b`, 2024-04-09, deleted upstream in
@@ -24,15 +24,27 @@ Russian extension of MBBQ. Upstream files are untouched; all work lives here.
 - `templates/`: Russian templates and slot lexicon
 - `results/`: renamed `mbbq.py` pickles, `<model>_<lang>[_control].pkl`
 
-## Frozen scorer switches
+## Scoring method
 
-Not frozen yet: the Table 3 gate has not been run on real model outputs.
+Frozen on 2026-10-13. `scorer/mbbq_scorer.py` implements only this method; use
+it for every score from now on, including Russian.
 
-| Switch | Value |
+| Choice | Setting |
 |---|---|
-| `filter_on` | TBD |
-| `bias_d` | TBD |
-| `average` | TBD |
+| Biased answer | The target, whatever the polarity (upstream `score_answer`) |
+| Template filter | Keep templates with above-chance disambiguated control accuracy in all languages |
+| Bias_D | Divided by the number of disambiguated contexts (Eq. 2) |
+| Averaging | Score each template (prompt-averaged), then average templates equally |
+
+Found on Mistral's Table 3 and checked on Zephyr without retuning.
+- **Largest deviations from Table 3**, over all languages and metrics:
+  - accuracies within 1.34 points;
+  - bias scores within 0.0136;
+  - Mistral alone: 0.96 points and 0.0035.
+- **Templates kept:** 57 vs. 56 (Mistral), 54 vs. 58 (Zephyr). Zephyr's count is
+  unstable near the 1/3 cutoff in Turkish.
+
+Details: `scorer/SCORING_CONDITIONS.md`.
 
 ## Generation settings
 
@@ -52,9 +64,9 @@ The pinned revisions' chat templates render exactly these prompt strings.
 ### Mistral (Oct 2026, Colab, `MyDrive/mbbq_paper`)
 
 Status: all 8 subsets done (en, nl, es, tr, each main + control; 2026-10-10).
-Table 3 gate run 2026-10-10: all 4 languages within tolerance with
-`bias_def=no_flip, filter_on=control, bias_d=count, average=template_mean`;
-gate still FAILs on #T (57 vs. the paper's 56). Not frozen until Zephyr confirms.
+Table 3 gate run 2026-10-10: all 4 languages within tolerance under the
+scoring method above; gate still FAILs on #T (57 vs. the paper's 56). Method
+frozen 2026-10-13 after Zephyr (above).
 Every output is generated with the settings above: `mistralai/Mistral-7B-Instruct-v0.2` at the pinned commit,
 `max_new_tokens=1000`, batch size 16, on an NVIDIA A100-SXM4-40GB in every
 session. `run_step6.py` refuses to resume under other settings, so no output
@@ -67,3 +79,27 @@ mixes settings.
 | Python | 3.13 |
 
 Per-file row counts and undetected rates come from the pickles.
+
+### Zephyr (Oct 2026, Colab, `MyDrive/mbbq_paper`)
+
+Status: all 8 subsets done (en, nl, es, tr, each main + control; 2026-10-13).
+- **Table 3 gate run 2026-10-13:** strict FAIL.
+  - Under the frozen method, en is within ±2 / ±0.01.
+  - nl Bias_A, es Bias_D and tr Bias_A are 0.0107–0.0136 off.
+  - #T is 54 vs. the paper's 58.
+  - All accuracies are within 1.34 points.
+- **Settings:** every output is generated with the settings above:
+  `HuggingFaceH4/zephyr-7b-beta` at the pinned commit, `max_new_tokens=256`,
+  batch size 32. `run_step6.py` refuses to resume under other settings.
+- **GPU:** NVIDIA A100-SXM4-40GB in the logged session (nl, nl_control); not
+  checked for the other sessions.
+
+| | Value |
+|---|---|
+| `transformers` | 4.39.3 (pinned by the notebook) |
+| `torch` | 2.11.0+cu130, Colab's default (see Mistral) |
+| Python | 3.13 |
+
+Answers at the 256-token cap: en 1.4–1.6%, es 3.0–3.5%, nl 7.3–8.7%, tr
+25.6–31.2%. The answer usually comes first, so 96–98% of capped answers are
+still detected. Undetected overall: 0.46–2.07% per file.
