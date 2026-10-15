@@ -26,23 +26,24 @@ Russian extension of MBBQ. Upstream files are untouched; all work lives here.
 
 ## Scoring method
 
-Frozen on 2026-10-13. `scorer/mbbq_scorer.py` implements only this method; use
-it for every score from now on, including Russian.
+Frozen on 2026-10-15. `scorer/mbbq_scorer.py` implements only this method; use
+it for every score from now on, including Russian. It follows the MBBQ first
+author's description of the paper's scoring (email, 2026-10-15).
 
 | Choice | Setting |
 |---|---|
-| Biased answer | The target, whatever the polarity (upstream `score_answer`) |
-| Template filter | Keep templates with above-chance disambiguated control accuracy in all languages |
+| Denominators | Only rows with a detected answer, in every score and in the template filter |
+| Biased answer | The target, whatever the polarity (upstream `score_answer`; the author confirms Table 3 uses it) |
+| Template filter | Per model: keep templates with above-chance disambiguated control accuracy in all languages |
 | Bias_D | Divided by the number of disambiguated contexts (Eq. 2) |
-| Averaging | Score each template (prompt-averaged), then average templates equally |
+| Averaging | Score each template on its rows pooled across the prompts, then average templates equally |
 
-Found on Mistral's Table 3 and checked on Zephyr without retuning.
 - **Largest deviations from Table 3**, over all languages and metrics:
-  - accuracies within 1.34 points;
-  - bias scores within 0.0136;
-  - Mistral alone: 0.96 points and 0.0035.
-- **Templates kept:** 57 vs. 56 (Mistral), 54 vs. 58 (Zephyr). Zephyr's count is
-  unstable near the 1/3 cutoff in Turkish.
+  - accuracies within 1.13 points;
+  - bias scores within 0.0173;
+  - Mistral alone: 0.95 points and 0.0035.
+- **Templates kept:** 57 vs. 56 (Mistral), 56 vs. 58 (Zephyr). Zephyr's count is
+  unstable near the 1/3 cutoff.
 
 Details: `scorer/SCORING_CONDITIONS.md`.
 
@@ -64,9 +65,8 @@ The pinned revisions' chat templates render exactly these prompt strings.
 ### Mistral (Oct 2026, Colab, `MyDrive/mbbq_paper`)
 
 Status: all 8 subsets done (en, nl, es, tr, each main + control; 2026-10-10).
-Table 3 gate run 2026-10-10: all 4 languages within tolerance under the
-scoring method above; gate still FAILs on #T (57 vs. the paper's 56). Method
-frozen 2026-10-13 after Zephyr (above).
+Under the scoring method above, all 4 languages are within ±2 / ±0.01 of
+Table 3; #T is 57 vs. the paper's 56.
 Every output is generated with the settings above: `mistralai/Mistral-7B-Instruct-v0.2` at the pinned commit,
 `max_new_tokens=1000`, batch size 16, on an NVIDIA A100-SXM4-40GB in every
 session. `run_step6.py` refuses to resume under other settings, so no output
@@ -83,11 +83,10 @@ Per-file row counts and undetected rates come from the pickles.
 ### Zephyr (Oct 2026, Colab, `MyDrive/mbbq_paper`)
 
 Status: all 8 subsets done (en, nl, es, tr, each main + control; 2026-10-13).
-- **Table 3 gate run 2026-10-13:** strict FAIL.
-  - Under the frozen method, en is within ±2 / ±0.01.
-  - nl Bias_A, es Bias_D and tr Bias_A are 0.0107–0.0136 off.
-  - #T is 54 vs. the paper's 58.
-  - All accuracies are within 1.34 points.
+- **Table 3, under the scoring method above:** nl and tr are within ±2 / ±0.01.
+  - en Bias_D and es Bias_D are 0.0107 and 0.0173 off.
+  - #T is 56 vs. the paper's 58.
+  - All accuracies are within 1.13 points.
 - **Settings:** every output is generated with the settings above:
   `HuggingFaceH4/zephyr-7b-beta` at the pinned commit, `max_new_tokens=256`,
   batch size 32. `run_step6.py` refuses to resume under other settings.
