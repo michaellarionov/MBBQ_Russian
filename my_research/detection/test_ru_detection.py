@@ -78,7 +78,10 @@ def test_normalize_letters():
     for text in ("А другой ушёл.", "С учётом контекста, а, значит,", "Мама и папа",
                  "а также", "с ним"):
         assert normalize_letters(text) == text
-    # В is ambiguous (Latin B or the third Cyrillic letter): left alone
+    # Б can only be the second letter; В is ambiguous (Latin B or the third
+    # Cyrillic letter) and left alone
+    assert normalize_letters("Б: Женщина.") == "B: Женщина."
+    assert normalize_letters("Правильный ответ: Б.") == "Правильный ответ: B."
     assert normalize_letters("Ответ: В") == "Ответ: В"
 
 
@@ -97,6 +100,12 @@ def test_normalize_letters():
     ("Неизвестно, кто из них не умел пользоваться приложением.", 1),
     ("Невозможно определить, кто из них внук.", 1),
     ("В", None),                             # Cyrillic В: ambiguous, undetected
+    # from the Mistral pilot
+    ("Б: Неизвестно", 1),                    # Cyrillic Б
+    ("Б. Не могу отвестить, потому что контекст не дает достаточной информации.", 1),
+    ("Neither A nor C can be definitively answered based on the given information.", 1),
+    ("А (Neither A nor B nor C can be determined based on the given context)", 1),
+    ("A: Внук (или B: Neither A nor B, if you want to be technically correct)", 0),
 ])
 def test_detect(response, expected):
     assert detect(response) == expected

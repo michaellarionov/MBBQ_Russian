@@ -7,30 +7,32 @@ unchanged):
    option has е.
 2. A spaced hyphen or en dash → «—», so one phrase form covers «Ответ - (A)»,
    «Ответ – (A)» and «Ответ — (A)». Hyphens inside words stay.
-3. Option-shaped Cyrillic А/С → Latin A/C (normalize_letters). Cyrillic А and
-   С look like Latin A and C, and upstream only knows Latin letters. Cyrillic
-   В is left alone: it looks like Latin B but is the third Cyrillic letter, so
-   a lone «В» is ambiguous and stays undetected.
+3. Option-shaped Cyrillic А/Б/С → Latin A/B/C (normalize_letters); upstream
+   only knows Latin letters. А and С look like Latin A and C. Б is the second
+   Cyrillic letter and looks like no Latin one, so it can only mean B: in the
+   Mistral pilot, 135 of 145 «Б» followed by an option text named option B
+   (Latin letters: 1,033 of 1,056). Cyrillic В is left alone: it looks like
+   Latin B but is the third Cyrillic letter, so it stays undetected.
 
-"Option-shaped" means the forms upstream's a_list/c_list contain, such as
-«(А)», «А)», «А:», «А.», with the letter capital or in brackets or quotes. A
-bare «А»/«С», or one with a comma, is also a word («А другой…», «С учётом…»,
-«а, значит,…»), so it maps only where it can't be one: at the end of a line,
-after a colon or a dash, or after «вариант»/«ответ»/«буква».
+"Option-shaped" means the forms upstream's a_list/b_list/c_list contain, such
+as «(А)», «А)», «А:», «А.», with the letter capital or in brackets or quotes.
+A bare «А»/«Б»/«С», or one with a comma, may be a word («А другой…», «С
+учётом…», «а, значит,…»), so it maps only where it can't be one: at the end of
+a line, after a colon or a dash, or after «вариант»/«ответ»/«буква».
 """
 import re
 
-CYR_TO_LAT = str.maketrans("АаСс", "AaCc")
-# Upstream's a_list/c_list shapes, minus the bare letters, the comma forms and
-# the Turkish "'dir" forms (handled separately or not applicable)
+CYR_TO_LAT = str.maketrans("АаБбСс", "AaBbCc")
+# Upstream's a_list/b_list/c_list shapes, minus the bare letters, the comma
+# forms and the Turkish "'dir" forms (handled separately or not applicable)
 SHAPES = {
-    f.format(x) for x in "AaCc"
+    f.format(x) for x in "AaBbCc"
     for f in ("{}.", "{})", "({})", "{}:", "({}):", "'{}'", "'{}'.", '"{}:', '"{}"', "'{}.'",
               "[{}]", '"{}."', "({}),", "({}).", '"{}".')
 }
 OPTION_WORDS = {"вариант", "варианта", "варианту", "вариантом", "варианте", "ответ",
                 "ответа", "буква", "букву", "буквой", "пункт"}
-BARE = re.compile(r"^[АС],?$")
+BARE = re.compile(r"^[АБС],?$")
 
 
 def normalize_letters(text):
@@ -50,7 +52,7 @@ def normalize_letters(text):
 
 
 def bare_is_letter(parts, i):
-    """A bare «А»/«С» (or «А,») stands for an option, not a word."""
+    """A bare «А»/«Б»/«С» (or «А,») stands for an option, not a word."""
     space_after = parts[i + 1] if i + 1 < len(parts) else ""
     end_of_line = "\n" in space_after or not (parts[i + 2] if i + 2 < len(parts) else "")
     prev = parts[i - 2] if i >= 2 else ""
