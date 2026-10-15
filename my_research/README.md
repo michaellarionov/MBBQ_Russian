@@ -15,13 +15,20 @@ Russian extension of MBBQ. Upstream files are untouched; all work lives here.
     `KeyDataset` imports it lacks (as shipped, `-mode ask_model` raises NameError)
     and skips `login()` when no `-token` is given. It also stops `datasets` from
     pickling the whole model to fingerprint `ask_model`'s `map` call, which used
-    tens of GB of RAM and got the process SIGKILLed on Colab.
+    tens of GB of RAM and got the process SIGKILLed on Colab. For `-lang ru`
+    and `ru_masc` it registers the Russian prompts and detection phrases from
+    `detection/` at runtime; other languages run exactly as upstream.
   - `run_step6.py` runs one subset at a time and resumes after disconnects. It
     loads the pinned model once, checks the merged rows against a full
     `generate_samples`, and won't save outputs without answers. It stamps the
     generation settings into its work folder (`<key>_settings.json`) and stops
     rather than reuse files made with other settings.
-- `templates/`: Russian templates and slot lexicon
+- `templates/`: Russian templates and slot lexicon; `generate_ru.py` writes
+  `data/*_ru.jsonl`, `check_ru.py` runs every mechanical check (run it after
+  each edit)
+- `detection/`: Russian prompts and answer-detection phrases
+  (`ru_detection.py`) and response normalisation (`normalize_letters.py`:
+  ё → е, Cyrillic А/С option letters → Latin), used through `run_mbbq.py`
 - `results/`: renamed `mbbq.py` pickles, `<model>_<lang>[_control].pkl`
 
 ## Scoring method

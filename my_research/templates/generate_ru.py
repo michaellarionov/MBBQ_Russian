@@ -377,10 +377,14 @@ def pick_row(variants, sample, control, masc):
     return variants.get("")
 
 
-def generate(cat, kind, templates, lex, unknowns, args, problems):
+def out_name(cat, kind):
+    return f"{cat}{'_control' if kind == 'control' else ''}_ru{'_masc' if kind == 'masc' else ''}.jsonl"
+
+
+def build(cat, kind, templates, lex, unknowns, data_dir, problems):
+    """[(English sample, template row, Russian sample)], skipped, failed."""
     control, masc = kind == "control", kind == "masc"
-    src = Path(args.data) / f"{cat}{'_control' if control else ''}_en.jsonl"
-    dst = Path(args.out) / f"{cat}{'_control' if control else ''}_ru{'_masc' if masc else ''}.jsonl"
+    src = Path(data_dir) / f"{cat}{'_control' if control else ''}_en.jsonl"
     samples = [json.loads(line) for line in open(src, encoding="utf-8")]
     names = control_names(samples, lex, cat, problems) if control else None
     out, skipped, failed = [], 0, 0
@@ -393,7 +397,15 @@ def generate(cat, kind, templates, lex, unknowns, args, problems):
         if r is None:
             failed += 1
         else:
-            out.append(r)
+            out.append((s, row, r))
+    return out, skipped, failed
+
+
+def generate(cat, kind, templates, lex, unknowns, args, problems):
+    masc = kind == "masc"
+    dst = Path(args.out) / out_name(cat, kind)
+    built, skipped, failed = build(cat, kind, templates, lex, unknowns, args.data, problems)
+    out = [r for _, _, r in built]
     status = f"{len(out)} ok, {failed} with problems, {skipped} skipped (template not kept"
     status += ", or no masc row)" if masc else ")"
     if failed or args.check:

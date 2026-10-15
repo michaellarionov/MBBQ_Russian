@@ -1,4 +1,5 @@
-"""Run upstream mbbq.py unchanged, working around three bugs in it.
+"""Run upstream mbbq.py unchanged, working around three bugs in it and adding
+Russian.
 
 mbbq.py uses torch.bfloat16 and KeyDataset in ask_model but imports neither,
 so `-mode ask_model` raises NameError. It also calls login(token) even when
@@ -6,10 +7,18 @@ so `-mode ask_model` raises NameError. It also calls login(token) even when
 cached HF login / HF_TOKEN env var is used. And ask_model runs out of RAM
 on a 7B model (see the datasets patch below). Arguments pass straight through:
   python my_research/generation/run_mbbq.py -mode ask_model -lang en ...
+
+Russian (-lang ru, and ru_masc for Gender_identity_ru_masc.jsonl): mbbq.py
+hard-codes its languages, so the Russian prompts and detection phrases
+(my_research/detection/ru_detection.py) are added to answer_detection's
+dictionaries before mbbq.py imports them, -lang accepts ru and ru_masc, and
+detect_answer normalises Russian responses first (normalize_letters.py).
+Other languages run exactly as upstream.
 Like mbbq.py, it reads data/ and writes trial<exp_id>_samples_<lang>.pkl
 relative to the current directory.
 """
-import runpy
+import argparse
+import ast
 import sys
 from pathlib import Path
 
@@ -42,8 +51,31 @@ for _mod in list(sys.modules.values()):
 ROOT = Path(__file__).resolve().parents[2]
 sys.dont_write_bytecode = True  # keep the upstream tree clean
 sys.path.insert(0, str(ROOT))  # for mbbq.py's `from answer_detection import *`
+sys.path.insert(0, str(ROOT / "my_research" / "detection"))
 _login = huggingface_hub.login
 huggingface_hub.login = lambda token=None, *a, **k: _login(token, *a, **k) if token else None
 
-runpy.run_path(str(ROOT / "mbbq.py"), run_name="__main__",
-               init_globals={"torch": torch, "KeyDataset": KeyDataset})
+import answer_detection  # noqa: E402  (upstream; mbbq.py's star import reuses this module)
+import ru_detection  # noqa: E402
+
+ru_detection.register(answer_detection)
+_add_argument = argparse.ArgumentParser.add_argument
+
+
+def _add_lang_choices(self, *names, **kw):
+    if names == ("-lang",):
+        kw["choices"] = [*kw["choices"], *ru_detection.LANGS]
+    return _add_argument(self, *names, **kw)
+
+
+argparse.ArgumentParser.add_argument = _add_lang_choices
+
+# Run mbbq.py's definitions, wrap detect_answer, then run its __main__ block:
+# detect_answers looks detect_answer up in the module globals at call time.
+MBBQ = ROOT / "mbbq.py"
+*defs, main = ast.parse(MBBQ.read_text(), str(MBBQ)).body
+assert isinstance(main, ast.If) and ast.unparse(main.test) == "__name__ == '__main__'"
+ns = {"__name__": "__main__", "__file__": str(MBBQ), "torch": torch, "KeyDataset": KeyDataset}
+exec(compile(ast.Module(defs, []), str(MBBQ), "exec"), ns)
+ns["detect_answer"] = ru_detection.wrap_detect_answer(ns["detect_answer"])
+exec(compile(ast.Module(main.body, []), str(MBBQ), "exec"), ns)

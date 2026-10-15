@@ -21,6 +21,9 @@ Log in to Hugging Face first (huggingface-cli login or HF_TOKEN).
   python my_research/generation/run_step6.py --model mistral \
       --work_dir /content/drive/MyDrive/mbbq_paper/work \
       --results_dir /content/drive/MyDrive/mbbq_paper/results
+
+Russian (needs data/*_ru.jsonl): add `--langs ru`; the leak comparison is
+`--langs ru_masc --subsets Gender_identity --no_control`.
 """
 import argparse
 import json
