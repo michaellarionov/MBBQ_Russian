@@ -38,12 +38,14 @@ def test_polarity_does_not_change_bias_direction():
     assert score(frame([row("ambig", "neg", U, O)] * 2))["bias_A"] == pytest.approx(-1.0)
 
 
-def test_undetected_wrong_for_acc_discarded_for_bias():
-    df = frame([row("ambig", "neg", U, T), row("ambig", "neg", U, None)])
+def test_undetected_discarded_from_every_score():
+    df = frame([row("ambig", "neg", U, U), row("ambig", "neg", U, T), row("ambig", "neg", U, None),
+                row("disambig", "neg", T, T), row("disambig", "neg", T, None)])
     s = score(df)
-    assert s["acc_A"] == pytest.approx(0.0)
-    assert s["bias_A"] == pytest.approx(1.0)
-    assert s["n_undetected"] == 1
+    assert s["acc_A"] == pytest.approx(0.5)  # 1 of 2 detected, not 1 of 3
+    assert s["bias_A"] == pytest.approx(0.5)
+    assert s["acc_D"] == pytest.approx(1.0)
+    assert s["n_undetected"] == 2
 
 
 def test_no_target_rows_dropped():
@@ -64,13 +66,11 @@ def test_disambig_correct_only_in_biased_contexts():
     assert score(df)["acc_D"] == pytest.approx(0.5)
 
 
-def test_prompts_averaged_within_template():
-    rows = [row("ambig", "neg", U, T, prompt=0),
-            row("ambig", "neg", U, U, prompt=1),
-            row("ambig", "neg", U, None, prompt=1)]
+def test_prompts_pooled_within_template():
+    rows = [row("ambig", "neg", U, T, prompt=0)] + [row("ambig", "neg", U, U, prompt=1)] * 3
     s = score(frame(rows))
-    assert s["bias_A"] == pytest.approx(0.5)
-    assert s["acc_A"] == pytest.approx(0.25)  # (prompt 0: 0 + prompt 1: 1/2) / 2
+    assert s["bias_A"] == pytest.approx(0.25)  # 1 of 4 pooled rows; a mean over prompts gives 0.5
+    assert s["acc_A"] == pytest.approx(0.75)
 
 
 def test_templates_weighted_equally():
@@ -91,6 +91,13 @@ def test_template_filter_requires_all_languages():
     en = frame([row("disambig", "neg", T, T, q=1), row("disambig", "neg", T, T, q=2)])
     es = frame([row("disambig", "neg", T, T, q=1), row("disambig", "neg", T, O, q=2)])
     assert template_filter({"en": en, "es": es}) == {("Age", 1)}
+
+
+def test_template_filter_counts_only_detected():
+    # 1 of 3 correct with undetected counted wrong (not above 1/3); 1 of 1 detected.
+    en = frame([row("disambig", "neg", T, T, q=1), row("disambig", "neg", T, None, q=1),
+                row("disambig", "neg", T, None, q=1)])
+    assert template_filter({"en": en}) == {("Age", 1)}
 
 
 def test_q_id_is_per_category():
