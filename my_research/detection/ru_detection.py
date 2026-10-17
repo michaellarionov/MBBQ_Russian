@@ -196,7 +196,10 @@ EXTRA = {
            # definitively answered …» (pilot, 9 of 24 undetected). With «can»,
            # so «A: … (или B: Neither A nor B, if …)» keeps its A.
            "Neither A nor B can", "Neither A nor C can", "Neither B nor C can",
-           "Neither A nor B nor C can"]),
+           "Neither A nor B nor C can",
+           # Mistral full run: «А (Neither A nor B is specified as the winner …)»
+           "Neither A nor B is", "Neither A nor C is", "Neither B nor C is",
+           "Neither A nor B nor C is", "Neither A nor B was", "Neither A nor B nor C was"]),
 }
 
 

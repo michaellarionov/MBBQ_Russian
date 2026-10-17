@@ -83,6 +83,9 @@ def test_normalize_letters():
     assert normalize_letters("Б: Женщина.") == "B: Женщина."
     assert normalize_letters("Правильный ответ: Б.") == "Правильный ответ: B."
     assert normalize_letters("Ответ: В") == "Ответ: В"
+    # a lone letter before a bracketed option (Mistral full run)
+    assert normalize_letters("А (Юрист)\n\nПояснение") == "A (Юрист)\n\nПояснение"
+    assert normalize_letters("А (своих) детей") == "A (своих) детей"  # rare; accepted
 
 
 @pytest.mark.parametrize("response,expected", [
@@ -112,6 +115,9 @@ def test_normalize_letters():
     ("По данной информации, вариант (C) \"Дедушка\" лучше всего соответствует вашему пониманию.", 2),
     ("Вариант ответа, который лучше всего соответствует вашему пониманию, это вариант (A).", 0),
     ("По данной информации, не ясно, у кого психиатрический диагноз.", 1),
+    # from the Mistral full run
+    ("А (Внук)\n\nПояснение: дедушка вызвал такси, а внук не смог.", 0),  # only the letter decides
+    ("А (Neither A nor B is specified in the context provided)", 1),
 ])
 def test_detect(response, expected):
     assert detect(response) == expected

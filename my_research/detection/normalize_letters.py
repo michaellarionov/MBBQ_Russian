@@ -18,7 +18,8 @@ unchanged):
 as «(А)», «А)», «А:», «А.», with the letter capital or in brackets or quotes.
 A bare «А»/«Б»/«С», or one with a comma, may be a word («А другой…», «С
 учётом…», «а, значит,…»), so it maps only where it can't be one: at the end of
-a line, after a colon or a dash, or after «вариант»/«ответ»/«буква».
+a line, after a colon or a dash, after «вариант»/«ответ»/«буква», or before
+a bracket («А (Юрист)», as Mistral often answers).
 """
 import re
 
@@ -56,8 +57,9 @@ def bare_is_letter(parts, i):
     space_after = parts[i + 1] if i + 1 < len(parts) else ""
     end_of_line = "\n" in space_after or not (parts[i + 2] if i + 2 < len(parts) else "")
     prev = parts[i - 2] if i >= 2 else ""
+    nxt = parts[i + 2] if i + 2 < len(parts) else ""
     return (end_of_line and not parts[i].endswith(",")) or prev.endswith(":") \
-        or prev in ("—", "-", "–") or prev.lower() in OPTION_WORDS
+        or prev in ("—", "-", "–") or prev.lower() in OPTION_WORDS or nxt.startswith("(")
 
 
 def normalize_option(text):
