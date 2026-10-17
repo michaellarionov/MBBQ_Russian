@@ -274,10 +274,11 @@ In the form editor, open **Settings**:
 
 5. **Don't explain expected answers** or the hypotheses before voters respond.
 6. **When all voters have answered,** open the response sheet and choose
-   **File → Download → Comma-separated values (.csv)**. Save it in the
-   repository as `my_research/templates/stereotype_votes.csv` and close the form
+   **File → Download → Comma-separated values (.csv)**. Save it as
+   `my_research/docs/stereotype_votes.csv` (git-ignored: one row per voter with
+   their background, consented for aggregate use only) and close the form
    (**Responses → Accepting responses: off**).
-7. **The tally happens in the repository** (Claude Code). For each item, it
+7. **The tally happens in the repository** (`templates/tally_votes.py`). For each item, it
    counts "Да" against the total number of voters, fills `vote_keep` in the
    worksheets, and lists the rejected stereotypes and their templates.
    Optionally, it reports agreement (Fleiss' kappa).
@@ -379,7 +380,7 @@ __TABLE__
 - [ ] Tested on a phone; test response deleted.
 - [ ] Voter codes assigned; at least 3 voters, an odd number in total.
 - [ ] Researcher voted first; each other voter got their own message and code.
-- [ ] All responses in; form closed; CSV saved as `my_research/templates/stereotype_votes.csv`.
+- [ ] All responses in; form closed; CSV saved as `my_research/docs/stereotype_votes.csv`.
 - [ ] Tally run in the repository.
 '''
 doc = (doc.replace("__JS_ITEMS__", js_items).replace("__JS_SECTIONS__", js_sections)

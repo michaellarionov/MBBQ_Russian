@@ -22,8 +22,12 @@ Log in to Hugging Face first (huggingface-cli login or HF_TOKEN).
       --work_dir /content/drive/MyDrive/mbbq_paper/work \
       --results_dir /content/drive/MyDrive/mbbq_paper/results
 
-Russian (needs data/*_ru.jsonl): add `--langs ru`; the leak comparison is
-`--langs ru_masc --subsets Gender_identity --no_control`.
+Russian: `--langs ru`; the leak comparison is `--langs ru_masc --subsets
+Gender_identity --no_control`. They read <work_dir>/data/*_ru*.jsonl: the
+notebook generates those into Drive (data/ is linked only when missing).
+
+A per-subset file made from other data than <work_dir>/data holds now (e.g.
+after a worksheet edit) stops the run before the model is asked.
 """
 import argparse
 import json
@@ -66,6 +70,16 @@ def mbbq(work_dir, mode, lang, exp_id, control, subsets):
     if control:
         cmd.append("--control")
     subprocess.run(cmd, cwd=work_dir, check=True)
+
+
+def fresh_samples(work, lang, ref_id, control, subsets):
+    """generate_samples from the data as it is now (mbbq.py reuses an existing file)."""
+    ref_pkl = work / f"trial{ref_id}_samples_{lang}.pkl"
+    ref_pkl.unlink(missing_ok=True)  # a leftover from an interrupted run
+    mbbq(work, "generate_samples", lang, ref_id, control, subsets)
+    ref = load(ref_pkl)
+    ref_pkl.unlink()
+    return ref
 
 
 def check_gpu():
@@ -126,6 +140,16 @@ def run_one(args, lang, control, asker):
         pkl = work / f"trial{exp_id}_samples_{lang}.pkl"
         mbbq(work, "generate_samples", lang, exp_id, control, [subset])
         df = load(pkl)
+        # mbbq.py reuses an existing per-subset file, so one made from older
+        # data (e.g. before a worksheet edit) would be asked and only caught
+        # at the final check: compare it with the current data first.
+        import pandas as pd
+        fresh = fresh_samples(work, lang, f"{exp_id}__fresh", control, [subset])
+        try:
+            pd.testing.assert_frame_equal(df[KEY_COLS], fresh[KEY_COLS])
+        except AssertionError:
+            sys.exit(f"[{tag}] {pkl} was made from other data than {work / 'data'} holds now. "
+                     "Delete it (its answers are for the old questions) and rerun.")
         if "answer" not in df.columns:
             t0 = time.time()
             df["answer"] = asker(df["question"].tolist())
@@ -135,13 +159,9 @@ def run_one(args, lang, control, asker):
         mbbq(work, "detect_answers", lang, exp_id, control, [subset])
         parts.append(load(pkl))
 
-    import pandas as pd
     merged = pd.concat(parts, ignore_index=True)
-    ref_id = f"{args.key}{'_control' if control else ''}__reference"
-    ref_pkl = work / f"trial{ref_id}_samples_{lang}.pkl"
-    mbbq(work, "generate_samples", lang, ref_id, control, args.subsets)
-    ref = load(ref_pkl)
-    ref_pkl.unlink()
+    ref = fresh_samples(work, lang, f"{args.key}{'_control' if control else ''}__reference",
+                        control, args.subsets)
     pd.testing.assert_frame_equal(merged[KEY_COLS], ref[KEY_COLS])
     assert merged["answer"].notna().all(), "missing model answers"
     assert "answer_detected" in merged.columns, "detect_answers did not run"
