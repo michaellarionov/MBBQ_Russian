@@ -17,7 +17,12 @@ Russian extension of MBBQ. Upstream files are untouched; all work lives here.
     pickling the whole model to fingerprint `ask_model`'s `map` call, which used
     tens of GB of RAM and got the process SIGKILLed on Colab. For `-lang ru`
     and `ru_masc` it registers the Russian prompts and detection phrases from
-    `detection/` at runtime; other languages run exactly as upstream.
+    `detection/` at runtime; other languages run exactly as upstream. Since
+    upstream `7999afd` (2026-10-15) points `target_loc` at the other person on
+    non-negative questions, it restores the published `target_loc` (the
+    target group's answer on every question), so new runs match the stored
+    ones; the scorer gives sign-corrected scores separately
+    (`annotate(..., sign_corrected=True)`).
   - `run_step6.py` runs one subset at a time and resumes after disconnects. It
     loads the pinned model once, checks the merged rows against a full
     `generate_samples`, and won't save outputs without answers. It stamps the

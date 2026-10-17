@@ -26,8 +26,10 @@ As the MBBQ first author described the paper's scoring (email, 2026-10-15):
   will correct the arXiv version.
 - **Bias sign:** upstream `score_answer` counts the target group as the biased
   answer on non-negative questions too, where the stereotyped answer is the
-  other person. The published scores use this sign; the author plans to move
-  the polarity handling earlier in the upstream pipeline. Scored with the sign
+  other person. The published scores use this sign; the author moved
+  the polarity handling into upstream `get_samples` (`7999afd`, 2026-10-15),
+  which `run_mbbq.py` undoes so every run keeps the published `target_loc`;
+  `annotate(..., sign_corrected=True)` gives the corrected scores. Scored with the sign
   corrected, our bias scores move far from Table 3 (largest bias deviation
   0.0852 for Mistral, 0.1577 for Zephyr), which confirms that Table 3 uses the
   upstream sign. Corrected Bias_A is about 2–3 times larger (Mistral en 0.1225

@@ -8,7 +8,8 @@ Checks, in order:
 2. data: the columns mbbq.py derives from the data (and the options) equal a
    fresh get_samples. For ru/ru_masc the data is regenerated from the current
    worksheets into a temporary folder unless --data is given; other languages
-   read data/;
+   read data/. target_loc is matched against both upstream definitions
+   (before and after 7999afd);
 3. answers: missing, empty, repeated verbatim, prompt-format leftovers, share
    mostly in Latin script;
 4. lengths: answer tokens against the model's max_new_tokens (truncated
@@ -45,7 +46,7 @@ sys.path[:0] = [str(ROOT), str(ROOT / "my_research" / "detection"),
 import answer_detection as ad  # noqa: E402  (upstream)
 import ru_detection  # noqa: E402
 from ask_model_paper import PAPER_MODELS  # noqa: E402
-from mbbq_scorer import annotate, attach_polarity, score  # noqa: E402
+from mbbq_scorer import annotate, attach_polarity, flip_target_loc, score  # noqa: E402
 from run_step6 import KEY_COLS, SUBSETS  # noqa: E402
 
 ru_detection.register(ad)
@@ -136,12 +137,24 @@ def check(args, tmp):
     head("2. Data")
     ref, data = fresh_samples(args.lang, args.control, subsets, args.data, tmp)
     print(f"fresh get_samples from {data}: {len(ref)} rows")
+    cols = [c for c in KEY_COLS if c != "target_loc"]
     try:
-        pd.testing.assert_frame_equal(df[KEY_COLS].reset_index(drop=True),
-                                      ref[KEY_COLS].reset_index(drop=True))
-        print(f"identical in {KEY_COLS}")
+        pd.testing.assert_frame_equal(df[cols].reset_index(drop=True),
+                                      ref[cols].reset_index(drop=True))
+        print(f"identical in {cols}")
     except AssertionError as e:
         print(f"DIFFERENT: {str(e)[:600]}")
+    # Upstream 7999afd (2026-10-15) points target_loc of a non-negative question
+    # at the other person; before it, target_loc was the target group's answer
+    # for every question (as published, and as run_mbbq.py restores it).
+    pol = attach_polarity(ref, data, args.lang, args.control)["question_polarity"]
+    t = ref["target_loc"]
+    old = flip_target_loc(t, ref["unknown_loc"], pol)
+    tl = df["target_loc"].reset_index(drop=True)
+    if len(tl) == len(ref):
+        for name, ref_t in [("before upstream 7999afd (as published)", old),
+                            ("after upstream 7999afd (sign-corrected)", t)]:
+            print(f"target_loc as {name}: {(tl == ref_t).mean():.2%} of rows match")
     same_opts = (df["model_ans"].reset_index(drop=True) == ref["model_ans"].reset_index(drop=True)).all() \
         if len(df) == len(ref) else False
     print(f"options (model_ans) identical: {same_opts}")
@@ -167,8 +180,18 @@ def check(args, tmp):
 
     head("4. Lengths")
     from transformers import AutoTokenizer
-    tok = AutoTokenizer.from_pretrained(cfg["hf_model"], revision=cfg["revision"],
-                                        local_files_only=True)
+    try:  # the tokenizer only, from the cache or else from the Hub
+        tok = AutoTokenizer.from_pretrained(cfg["hf_model"], revision=cfg["revision"])
+    except OSError as e:
+        tok = None
+        print(f"skipped: no tokenizer for {cfg['hf_model']} ({str(e)[:120]})")
+    if tok is not None:
+        check_lengths(tok, cfg, df, ans, is_str)
+
+    detection(args, df, data, subsets)
+
+
+def check_lengths(tok, cfg, df, ans, is_str):
     n_tok = pd.Series([len(t) for t in tok(ans.where(is_str, "").tolist(),
                                            add_special_tokens=False)["input_ids"]], index=df.index)
     cap = cfg["max_new_tokens"]
@@ -179,6 +202,8 @@ def check(args, tmp):
     q_tok = pd.Series([len(t) for t in tok([cfg["prompt"].format(q) for q in df["question"]])["input_ids"]])
     print(f"prompt tokens: median {q_tok.median():.0f}, max {q_tok.max()}")
 
+
+def detection(args, df, data, subsets):
     head("5. Detection")
     det = df["answer_detected"]
     print(f"stored undetected: {det.isna().sum()} of {len(df)} ({det.isna().mean():.2%})")

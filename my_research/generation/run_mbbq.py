@@ -14,6 +14,13 @@ hard-codes its languages, so the Russian prompts and detection phrases
 dictionaries before mbbq.py imports them, -lang accepts ru and ru_masc, and
 detect_answer normalises Russian responses first (normalize_letters.py).
 Other languages run exactly as upstream.
+
+target_loc: upstream 7999afd (2026-10-15) points it at the other person on
+non-negative questions. Every MBBQ run here, and the published scores, use the
+earlier definition (the target group's answer on every question), so when
+mbbq.py has that change, get_samples is wrapped to restore it
+(mbbq_scorer.flip_target_loc). The scorer computes sign-corrected scores
+separately.
 Like mbbq.py, it reads data/ and writes trial<exp_id>_samples_<lang>.pkl
 relative to the current directory.
 """
@@ -52,11 +59,13 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.dont_write_bytecode = True  # keep the upstream tree clean
 sys.path.insert(0, str(ROOT))  # for mbbq.py's `from answer_detection import *`
 sys.path.insert(0, str(ROOT / "my_research" / "detection"))
+sys.path.insert(0, str(ROOT / "my_research" / "scorer"))
 _login = huggingface_hub.login
 huggingface_hub.login = lambda token=None, *a, **k: _login(token, *a, **k) if token else None
 
 import answer_detection  # noqa: E402  (upstream; mbbq.py's star import reuses this module)
 import ru_detection  # noqa: E402
+from mbbq_scorer import attach_polarity, flip_target_loc  # noqa: E402
 
 ru_detection.register(answer_detection)
 _add_argument = argparse.ArgumentParser.add_argument
@@ -70,7 +79,8 @@ def _add_lang_choices(self, *names, **kw):
 
 argparse.ArgumentParser.add_argument = _add_lang_choices
 
-# Run mbbq.py's definitions, wrap detect_answer, then run its __main__ block:
+# Run mbbq.py's definitions, wrap detect_answer and get_samples, then run its
+# __main__ block:
 # detect_answers looks detect_answer up in the module globals at call time.
 MBBQ = ROOT / "mbbq.py"
 *defs, main = ast.parse(MBBQ.read_text(), str(MBBQ)).body
@@ -78,4 +88,20 @@ assert isinstance(main, ast.If) and ast.unparse(main.test) == "__name__ == '__ma
 ns = {"__name__": "__main__", "__file__": str(MBBQ), "torch": torch, "KeyDataset": KeyDataset}
 exec(compile(ast.Module(defs, []), str(MBBQ), "exec"), ns)
 ns["detect_answer"] = ru_detection.wrap_detect_answer(ns["detect_answer"])
+
+
+def published_target_loc(get_samples):
+    def wrapped(subsets, control=False, language="en", **kw):
+        df = get_samples(subsets, control=control, language=language, **kw)
+        # get_samples reads data/ relative to the current directory too
+        pol = attach_polarity(df, "data", language, control)["question_polarity"]
+        df["target_loc"] = flip_target_loc(df["target_loc"], df["unknown_loc"],
+                                           pol.set_axis(df.index))
+        return df
+    return wrapped
+
+
+(get_samples_def,) = [n for n in defs if isinstance(n, ast.FunctionDef) and n.name == "get_samples"]
+if "other_loc" in ast.unparse(get_samples_def):  # upstream 7999afd or later
+    ns["get_samples"] = published_target_loc(ns["get_samples"])
 exec(compile(ast.Module(main.body, []), str(MBBQ), "exec"), ns)
