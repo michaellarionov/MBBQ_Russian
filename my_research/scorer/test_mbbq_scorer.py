@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from mbbq_scorer import NO_TARGET, annotate, flip_target_loc, score, template_filter
+from mbbq_scorer import (NO_TARGET, annotate, flip_target_loc, score, score_per_template,
+                         template_filter)
 
 # Answer positions: 0 = target group, 1 = other group, 2 = unknown.
 T, O, U = 0, 1, 2
@@ -125,13 +126,72 @@ def test_sign_corrected_counts_the_other_person_on_nonneg():
     # Non-negative question: the stereotyped answer is the other person.
     df = pd.DataFrame([row("ambig", "nonneg", U, O)] * 2)
     assert score(annotate(df))["bias_A"] == pytest.approx(-1.0)
-    assert score(annotate(df, sign_corrected=True))["bias_A"] == pytest.approx(1.0)
+    assert score(annotate(df, sign="corrected"))["bias_A"] == pytest.approx(1.0)
     neg = pd.DataFrame([row("ambig", "neg", U, T)] * 2)
-    assert score(annotate(neg, sign_corrected=True))["bias_A"] == pytest.approx(1.0)
+    assert score(annotate(neg, sign="corrected"))["bias_A"] == pytest.approx(1.0)
 
 
 def test_sign_corrected_biased_context_on_nonneg():
     # Gold = the other person on a non-negative question: a stereotype-consistent context.
     df = pd.DataFrame([row("disambig", "nonneg", O, O)])
     assert list(annotate(df)["context_type"]) == ["counter"]
-    assert list(annotate(df, sign_corrected=True)["context_type"]) == ["biased"]
+    assert list(annotate(df, sign="corrected")["context_type"]) == ["biased"]
+
+
+# The sign switch: balanced toy sets, half negative and half non-negative questions.
+
+def both_signs(rows):
+    df = pd.DataFrame(rows)
+    return {sign: annotate(df, sign=sign) for sign in ("published", "corrected")}
+
+
+def test_sign_always_target():
+    s = both_signs([row("ambig", "neg", U, T), row("ambig", "nonneg", U, T)] * 3)
+    assert score(s["published"])["bias_A"] == pytest.approx(1.0)
+    assert score(s["corrected"])["bias_A"] == pytest.approx(0.0)
+
+
+def test_sign_fully_stereotyped():
+    # Target on negative questions, the other person on non-negative ones.
+    s = both_signs([row("ambig", "neg", U, T), row("ambig", "nonneg", U, O)] * 3)
+    assert score(s["published"])["bias_A"] == pytest.approx(0.0)
+    assert score(s["corrected"])["bias_A"] == pytest.approx(1.0)
+
+
+def test_sign_always_unknown():
+    s = both_signs([row("ambig", "neg", U, U), row("ambig", "nonneg", U, U)] * 3)
+    assert score(s["published"])["bias_A"] == 0
+    assert score(s["corrected"])["bias_A"] == 0
+
+
+def test_sign_bias_d():
+    # Correct only when the gold answer is the target.
+    gold_target = both_signs([row("disambig", "neg", T, T), row("disambig", "neg", O, T),
+                              row("disambig", "nonneg", T, T), row("disambig", "nonneg", O, T)])
+    assert score(gold_target["published"])["bias_D"] == pytest.approx(0.5)
+    assert score(gold_target["corrected"])["bias_D"] == pytest.approx(0.0)
+    # Correct only in stereotype-consistent contexts: gold = target on a
+    # negative question, gold = the other person on a non-negative one.
+    consistent = both_signs([row("disambig", "neg", T, T), row("disambig", "neg", O, T),
+                             row("disambig", "nonneg", T, O), row("disambig", "nonneg", O, O)])
+    assert score(consistent["corrected"])["bias_D"] == pytest.approx(0.5)
+    assert score(consistent["published"])["bias_D"] == pytest.approx(0.0)
+
+
+def test_accuracy_and_filter_do_not_depend_on_sign():
+    rows = ([row("ambig", "neg", U, T, q=1), row("ambig", "nonneg", U, O, q=1),
+             row("ambig", "nonneg", U, U, q=2), row("ambig", "neg", U, None, q=2)]
+            + [row("disambig", pol, gold, ans, q=q) for q in (1, 2)
+               for pol in ("neg", "nonneg") for gold in (T, O) for ans in (T, O, U, None)])
+    s = both_signs(rows)
+    pub, cor = score_per_template(s["published"]), score_per_template(s["corrected"])
+    for m in ("acc_A", "acc_D", "n_undetected"):
+        assert list(pub[m]) == list(cor[m])
+    assert template_filter({"en": s["published"]}) == template_filter({"en": s["corrected"]})
+
+
+def test_sign_default_is_published():
+    df = pd.DataFrame([row("ambig", "nonneg", U, O), row("disambig", "nonneg", O, O)])
+    assert score(annotate(df)) == score(annotate(df, sign="published"))
+    with pytest.raises(ValueError, match="sign"):
+        annotate(df, sign="flipped")

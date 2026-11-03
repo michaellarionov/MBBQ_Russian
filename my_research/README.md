@@ -22,7 +22,7 @@ Russian extension of MBBQ. Upstream files are untouched; all work lives here.
     non-negative questions, it restores the published `target_loc` (the
     target group's answer on every question), so new runs match the stored
     ones; the scorer gives sign-corrected scores separately
-    (`annotate(..., sign_corrected=True)`).
+    (`annotate(..., sign="corrected")`, "Bias sign" below).
   - `run_step6.py` runs one subset at a time and resumes after disconnects. It
     loads the pinned model once, checks the merged rows against a full
     `generate_samples`, and won't save outputs without answers. It stamps the
@@ -58,6 +58,40 @@ author's description of the paper's scoring (email, 2026-10-15).
   unstable near the 1/3 cutoff.
 
 Details: `scorer/SCORING_CONDITIONS.md`.
+
+### Bias sign
+
+`annotate(df, sign=...)` picks the biased answer; nothing else in the method
+changes with it.
+
+| `sign` | Biased answer | Use |
+|---|---|---|
+| `published` (default) | The target group, whatever the polarity (released code) | Table 3 reproduction; gives exactly the frozen numbers above |
+| `corrected` | The target on a negative question, the other person on a non-negative one (BBQ's definition; upstream `7999afd`) | New claims |
+
+The sign changes Bias_A and the Bias_D context type (biased vs.
+counter-biased), never accuracy, the undetected counts or the template filter.
+`corrected` needs `question_polarity` (`attach_polarity`).
+`reproduce_table3.py` uses the default, `published`.
+
+`scorer/score_both_signs.py` scores every existing output under both signs
+and writes `results/sign/`:
+- `scores_published.csv`, `scores_corrected.csv`: one row per model ×
+  config × lang × set × metric, accuracies as fractions. `n_rows` and
+  `n_undetected` count the context condition's rows (ambiguous for `_A`,
+  disambiguated for `_D`). Configs:
+  - A: Table 3, en/nl/es/tr on the frozen filter;
+  - B: en/nl/es/tr/ru and ru control, all 98 templates;
+  - C: ru vs. ru_masc on paired items.
+- `per_template_published.csv`, `per_template_corrected.csv`: the same
+  metrics per template, `n_rows` = detected rows behind the value. Use these
+  for significance tests (templates as the unit).
+- `SIGN_COMPARISON.md`: both signs side by side, with language rankings.
+
+Each file name gives its sign. Russian answers are re-detected with the
+current detection code; other languages keep their stored detection. The
+script stops if accuracy, the undetected counts or the filter differ between
+the signs.
 
 ## Generation settings
 
