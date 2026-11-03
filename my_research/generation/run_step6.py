@@ -22,7 +22,7 @@ Log in to Hugging Face first (huggingface-cli login or HF_TOKEN).
       --work_dir /content/drive/MyDrive/mbbq_paper/work \
       --results_dir /content/drive/MyDrive/mbbq_paper/results
 
-Russian: `--langs ru`; the leak comparison is `--langs ru_masc --subsets
+Russian: `--langs ru`; the leak comparison is `--langs ru_masc ru_fem --subsets
 Gender_identity --no_control`. They read <work_dir>/data/*_ru*.jsonl: the
 notebook generates those into Drive (data/ is linked only when missing).
 

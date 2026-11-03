@@ -8,10 +8,10 @@ cached HF login / HF_TOKEN env var is used. And ask_model runs out of RAM
 on a 7B model (see the datasets patch below). Arguments pass straight through:
   python my_research/generation/run_mbbq.py -mode ask_model -lang en ...
 
-Russian (-lang ru, and ru_masc for Gender_identity_ru_masc.jsonl): mbbq.py
+Russian (-lang ru; ru_masc and ru_fem for Gender_identity_ru_masc/_fem.jsonl): mbbq.py
 hard-codes its languages, so the Russian prompts and detection phrases
 (my_research/detection/ru_detection.py) are added to answer_detection's
-dictionaries before mbbq.py imports them, -lang accepts ru and ru_masc, and
+dictionaries before mbbq.py imports them, -lang accepts those three, and
 detect_answer normalises Russian responses first (normalize_letters.py).
 Other languages run exactly as upstream.
 

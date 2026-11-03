@@ -4,7 +4,7 @@ Prompts and phrases approved 2026-10-15, after the Mistral pilot. Change the
 prompts only before the full runs; phrases may still be added later, since
 detection re-runs offline on the pickles.
 
-register(answer_detection) adds "ru" and "ru_masc" to upstream's
+register(answer_detection) adds "ru", "ru_masc" and "ru_fem" to upstream's
 dictionaries in place, so `from answer_detection import *` in mbbq.py sees
 them; run_mbbq.py calls it before running mbbq.py. Nothing upstream is edited.
 
@@ -36,7 +36,7 @@ the extras include English phrasings seen in Russian runs («Neither A nor …»
 """
 from normalize_letters import normalize_option, normalize_response
 
-LANGS = ("ru", "ru_masc")  # ru_masc: Gender_identity_ru_masc.jsonl (DECISIONS.md)
+LANGS = ("ru", "ru_masc", "ru_fem")  # Gender_identity_ru_masc/_fem.jsonl (DECISIONS.md)
 
 # In the order of answer_detection.prompts
 PROMPTS = [

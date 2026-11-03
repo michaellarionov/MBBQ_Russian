@@ -1,7 +1,7 @@
 """Write REVIEW_SHEET.md: the Russian next to the English, for reading.
 
 One block per template x BBQ version x set: the main set, the control set with
-two men, the control set with two women, and (Gender_identity) the masc set.
+two men, the control set with two women, and (Gender_identity) the masc and fem sets.
 Each block shows one disambiguated context, split into its ambiguous and
 disambiguating parts, with both questions, the answer options and the gold
 answer. The main set shows the first value pair in the English data for that
@@ -18,12 +18,12 @@ from datetime import date
 
 import generate_ru as g
 
-KINDS = {"main": "Main", "control": "Control", "masc": "Masc"}
+KINDS = {"main": "Main", "control": "Control", "masc": "Masc", "fem": "Fem"}
 
 
 def blocks(cat, kind, templates, lex, unknowns):
     """{(q, version): [block, ...]} for one file, in data order."""
-    control, masc = kind == "control", kind == "masc"
+    control, leak = kind == "control", kind if kind in g.LEAK_KINDS else None
     src = g.ROOT / "data" / f"{cat}{'_control' if control else ''}_en.jsonl"
     samples = [json.loads(line) for line in open(src, encoding="utf-8")]
     problems = g.Problems()
@@ -34,7 +34,7 @@ def blocks(cat, kind, templates, lex, unknowns):
         if s["context_condition"] != "disambig":
             continue
         q = int(s["question_index"])
-        row = g.pick_row(templates.get(cat, {}).get(q, {}), s, control, masc)
+        row = g.pick_row(templates.get(cat, {}).get(q, {}), s, control, leak)
         if row is None:
             continue
         pair = names and names[s["example_id"]]
@@ -121,7 +121,7 @@ def main():
     cats = args.category or g.CATS
     body, n_blocks, n_templates = [], 0, 0
     for cat in cats:
-        kinds = ["main", "control"] + (["masc"] if cat == "Gender_identity" else [])
+        kinds = ["main", "control"] + (list(g.LEAK_KINDS) if cat == "Gender_identity" else [])
         per = defaultdict(list)
         for kind in kinds:
             for key, bl in blocks(cat, kind, templates, lex, unknowns).items():
@@ -134,7 +134,7 @@ def main():
             n_templates += 1
             for version in sorted({v for qq, v in per if qq == q}):
                 body.append(f"#### q{q}, version {version}\n" if version not in ("", "None") else f"#### q{q} (one version)\n")
-                order = {"main": 0, "control": 1, "masc": 2}
+                order = {"main": 0, "control": 1, "masc": 2, "fem": 3}
                 bl = sorted(per[(q, version)], key=lambda b: (order[b["kind"]], b["pair"] != "two men"))
                 shown_control_en = False
                 for b in bl:

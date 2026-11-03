@@ -6,7 +6,7 @@
 Checks, in order:
 1. rows: per subset and context, 5 prompts per item, no duplicate rows;
 2. data: the columns mbbq.py derives from the data (and the options) equal a
-   fresh get_samples. For ru/ru_masc the data is regenerated from the current
+   fresh get_samples. For ru/ru_masc/ru_fem the data is regenerated from the current
    worksheets into a temporary folder unless --data is given; other languages
    read data/. target_loc is matched against both upstream definitions
    (before and after 7999afd);

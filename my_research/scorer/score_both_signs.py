@@ -40,6 +40,9 @@ MBBQ_LANGS = ["en", "nl", "es", "tr"]
 METRICS = ["acc_A", "bias_A", "acc_D", "bias_D"]
 INVARIANT = ["acc_A", "acc_D", "n_undetected"]
 CONTEXT = {"A": "ambig", "D": "disambig"}
+# Gender_identity leak sets (lang "ru"): set -> run language; "_rerun" pickles
+# are a second run of the same set (fem_analysis.py's noise floor).
+LEAK_SETS = {"masc": "ru_masc", "fem": "ru_fem", "masc_rerun": "ru_masc"}
 
 
 class Outputs:
@@ -57,8 +60,9 @@ class Outputs:
         return self.cache[key]
 
     def _load(self, model, lang, set_):
-        run_lang = "ru_masc" if set_ == "masc" else lang
-        name = f"{model}_{run_lang}{'_control' if set_ == 'control' else ''}.pkl"
+        run_lang = LEAK_SETS.get(set_, lang)
+        name = (f"{model}_{run_lang}{'_control' if set_ == 'control' else ''}"
+                f"{'_rerun' if set_.endswith('_rerun') else ''}.pkl")
         path = self.results / name
         if not path.exists():
             self.missing.append(name)

@@ -11,8 +11,9 @@ otherwise the six worksheet_<Cat>_ru.csv files, minus rows with vote_keep=no.
 Template row per sample (DECISIONS.md, "Slots and lexicon values"):
 - control set: the `control` row if the template has one;
 - BBQ version b: the `b` row if the template has one;
-- otherwise the main row. `masc` rows go to Gender_identity_ru_masc.jsonl only,
-  which holds just the templates that have one (DECISIONS.md, "Controlled
+- otherwise the main row. `masc` and `fem` rows go to
+  Gender_identity_ru_masc.jsonl and Gender_identity_ru_fem.jsonl only, which
+  hold just the templates that have one (DECISIONS.md, "Controlled
   gender-leak comparison").
 
 People to slots: in a disambiguated sample the gold answer fills the slot the
@@ -367,9 +368,13 @@ def control_names(samples, lex, seed, problems):
     return out
 
 
-def pick_row(variants, sample, control, masc):
-    if masc:
-        return variants.get("masc")
+LEAK_KINDS = ("masc", "fem")  # Gender_identity only, main set only
+
+
+def pick_row(variants, sample, control, leak=None):
+    """leak: "masc" or "fem" for those sets (only templates with that row)."""
+    if leak:
+        return variants.get(leak)
     if control and "control" in variants:
         return variants["control"]
     if sample["additional_metadata"].get("version") == "b" and "b" in variants:
@@ -378,19 +383,19 @@ def pick_row(variants, sample, control, masc):
 
 
 def out_name(cat, kind):
-    return f"{cat}{'_control' if kind == 'control' else ''}_ru{'_masc' if kind == 'masc' else ''}.jsonl"
+    return f"{cat}{'_control' if kind == 'control' else ''}_ru{'_' + kind if kind in LEAK_KINDS else ''}.jsonl"
 
 
 def build(cat, kind, templates, lex, unknowns, data_dir, problems):
     """[(English sample, template row, Russian sample)], skipped, failed."""
-    control, masc = kind == "control", kind == "masc"
+    control, leak = kind == "control", kind if kind in LEAK_KINDS else None
     src = Path(data_dir) / f"{cat}{'_control' if control else ''}_en.jsonl"
     samples = [json.loads(line) for line in open(src, encoding="utf-8")]
     names = control_names(samples, lex, cat, problems) if control else None
     out, skipped, failed = [], 0, 0
     for s in samples:
-        row = pick_row(templates.get(cat, {}).get(int(s["question_index"]), {}), s, control, masc)
-        if row is None:  # not kept in the vote, or no masc row
+        row = pick_row(templates.get(cat, {}).get(int(s["question_index"]), {}), s, control, leak)
+        if row is None:  # not kept in the vote, or no masc/fem row
             skipped += 1
             continue
         r = convert(s, row, lex, unknowns, names and names[s["example_id"]], problems)
@@ -402,12 +407,11 @@ def build(cat, kind, templates, lex, unknowns, data_dir, problems):
 
 
 def generate(cat, kind, templates, lex, unknowns, args, problems):
-    masc = kind == "masc"
     dst = Path(args.out) / out_name(cat, kind)
     built, skipped, failed = build(cat, kind, templates, lex, unknowns, args.data, problems)
     out = [r for _, _, r in built]
     status = f"{len(out)} ok, {failed} with problems, {skipped} skipped (template not kept"
-    status += ", or no masc row)" if masc else ")"
+    status += f", or no {kind} row)" if kind in LEAK_KINDS else ")"
     if failed or args.check:
         print(f"  {dst.name}: {status}{'' if args.check else '; not written'}")
         return
@@ -452,7 +456,7 @@ def main():
     unknowns = {r["en"]: r["ru"].strip() for r in read_csv(HERE / "ru_unknowns.csv")}
     print(f"Templates: {source}")
     for cat in args.category or CATS:
-        kinds = ["main", "control"] + (["masc"] if cat == "Gender_identity" else [])
+        kinds = ["main", "control"] + (list(LEAK_KINDS) if cat == "Gender_identity" else [])
         for kind in kinds:
             generate(cat, kind, templates, lex, unknowns, args, problems)
     problems.report(Problems.BLOCKING)

@@ -16,8 +16,9 @@ Russian extension of MBBQ. Upstream files are untouched; all work lives here.
     and skips `login()` when no `-token` is given. It also stops `datasets` from
     pickling the whole model to fingerprint `ask_model`'s `map` call, which used
     tens of GB of RAM and got the process SIGKILLed on Colab. For `-lang ru`
-    and `ru_masc` it registers the Russian prompts and detection phrases from
-    `detection/` at runtime; other languages run exactly as upstream. Since
+    and the leak sets `ru_masc` and `ru_fem` it registers the Russian prompts
+    and detection phrases from `detection/` at runtime; other languages run
+    exactly as upstream. Since
     upstream `7999afd` (2026-10-15) points `target_loc` at the other person on
     non-negative questions, it restores the published `target_loc` (the
     target group's answer on every question), so new runs match the stored
@@ -83,6 +84,11 @@ and writes `results/sign/`:
   - A: Table 3, en/nl/es/tr on the frozen filter;
   - B: en/nl/es/tr/ru and ru control, all 98 templates;
   - C: ru vs. ru_masc on paired items.
+
+`scorer/fem_analysis.py` compares feminine and masculine question agreement
+on Gender_identity (`ru`, `ru_masc`, `ru_fem`, and the `ru_masc` rerun as the
+noise floor), with the tests fixed in `docs/DECISIONS.md` ("Feminine
+variant") before the run, and writes `results/fem/`.
 - `per_template_published.csv`, `per_template_corrected.csv`: the same
   metrics per template, `n_rows` = detected rows behind the value. Use these
   for significance tests (templates as the unit).

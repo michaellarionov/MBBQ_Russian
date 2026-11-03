@@ -6,7 +6,7 @@ edit of a worksheet, the lexicon or ru_unknowns.csv; it writes nothing.
 
 1. Generation: everything `generate_ru.py --check` reports as blocking
    (template syntax, lexicon gaps, people it can't place).
-2. Generated items (main, control and masc), each problem with its template
+2. Generated items (main, control, masc and fem), each problem with its template
    and the number of items it affects:
    - formatting: capitals, sentence ends, spacing, doubled punctuation,
      unbalanced «» and (), Latin letters (except LATIN_OK), leftover slots;
@@ -206,7 +206,7 @@ def check_generated(args, templates, lex, unknowns, problems, report):
     unknown_words, first_seen = Counter(), {}
     total = 0
     for cat in args.category or g.CATS:
-        for kind in ["main", "control"] + (["masc"] if cat == "Gender_identity" else []):
+        for kind in ["main", "control"] + (list(g.LEAK_KINDS) if cat == "Gender_identity" else []):
             built, _, _ = g.build(cat, kind, templates, lex, unknowns, g.ROOT / "data", problems)
             total += len(built)
             for src, row, r in built:
@@ -229,6 +229,39 @@ def check_generated(args, templates, lex, unknowns, problems, report):
         report.add("words pymorphy3 doesn't know (add to KNOWN_STEMS if right)",
                    f"«{w}» ({n}×)", first_seen[w])
     return total
+
+
+def check_fem_rows(templates, report):
+    """Each `fem` row is its `masc` row with only the words agreeing with «кто»
+    made feminine (DECISIONS.md, "Feminine variant")."""
+    skip = {"variant", "q_neg", "q_nonneg", "notes"}
+    for cat, by_q in templates.items():
+        for q, variants in by_q.items():
+            fem, masc = variants.get("fem"), variants.get("masc")
+            if fem is None:
+                continue
+            where = f"{cat} q{q} (fem) [worksheet]"
+            if masc is None:
+                report.add("fem row without a masc row", "", where, "")
+                continue
+            for k in fem:
+                if k not in skip and fem[k] != masc[k]:
+                    report.add("fem row differs from its masc row outside the questions",
+                               k, where, fem[k][:80])
+            for f in ("q_neg", "q_nonneg"):
+                fw, mw = WORD.findall(fem[f]), WORD.findall(masc[f])
+                if len(fw) != len(mw) or re.sub(WORD, "", fem[f]) != re.sub(WORD, "", masc[f]):
+                    report.add("fem question not word-for-word the masc one", f, where, fem[f])
+                    continue
+                for a, b in zip(fw, mw):
+                    if a == b:
+                        continue
+                    # any reading pair: «начала» parses first as the noun «начало»
+                    if not any(pa.normal_form == pb.normal_form and pa.tag.gender == "femn"
+                               and pb.tag.gender == "masc"
+                               for pa in morph.parse(a.lower()) for pb in morph.parse(b.lower())):
+                        report.add("fem question changes more than agreement", f"{f}: «{b}» → «{a}»",
+                                   where, fem[f])
 
 
 def check_sources(templates, lex, unknowns, report):
@@ -298,6 +331,7 @@ def main():
     report = Report()
     total = check_generated(args, templates, lex, unknowns, problems, report)
     check_sources(templates, lex, unknowns, report)
+    check_fem_rows(templates, report)
 
     print(f"Templates: {source}; {total} items checked")
     problems.report(g.Problems.BLOCKING)
