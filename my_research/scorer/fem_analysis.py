@@ -14,8 +14,9 @@ Each detected answer is classed woman / man / unknown from the English tags
 - primary, ambiguous contexts: per item, (prompts answered «woman» under a)
   minus (under b), and the same for «man»; exact two-sided sign test over
   items with a nonzero difference (the item is the unit: its prompts aren't
-  independent). Holm correction over the 4 primary tests (H1 woman, H2 man,
-  fem vs. masc, × 2 models);
+  independent). Holm correction within each family of 4 primary tests (H1
+  woman, H2 man, fem vs. masc, × 2 models): Mistral and Zephyr, then the
+  replication models Qwen and T-lite;
 - secondary: Wilcoxon signed-rank over templates on the per-template mean
   difference; row-level discordant counts; disambiguated accuracy by the gold
   person's gender (sign tests over items);
@@ -36,7 +37,11 @@ from scipy.stats import binomtest, wilcoxon
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from mbbq_scorer import annotate, score  # noqa: E402
-from score_both_signs import MODELS, Outputs  # noqa: E402
+from score_both_signs import Outputs  # noqa: E402
+
+MODELS = ["mistral", "zephyr", "qwen", "tlite"]
+# Holm families (DECISIONS.md): the first two models, then the replication.
+FAMILIES = [("mistral", "zephyr"), ("qwen", "tlite")]
 
 SETS = ["main", "masc", "fem", "masc_rerun"]
 DATA_FILE = {"main": "Gender_identity_ru.jsonl", "masc": "Gender_identity_ru_masc.jsonl",
@@ -195,8 +200,9 @@ def main():
                 else:
                     rows.append(dict(model=model, kind=role, a=a, b=b, test=k, value=v))
             if role == "primary":
-                primary += [(model, "woman", r["woman"]["p sign test"]),
-                            (model, "man", r["man"]["p sign test"])]
+                w, mn = r["woman"], r["man"]
+                primary += [(model, "woman", w["p sign test"], w["items a>b"] > w["items a<b"]),
+                            (model, "man", mn["p sign test"], mn["items a<b"] > mn["items a>b"])]
             w, mn = r["woman"], r["man"]
             lines.append(
                 f"| {a} vs. {b} | {role} | {r['answer changed']:.1%} | "
@@ -207,15 +213,26 @@ def main():
                              for k in ("Acc_D gold woman", "Acc_D gold man")) + " |")
         lines.append("")
     if primary:
-        adj = holm([p for _, _, p in primary])
         lines += ["## Primary tests (fem vs. masc, ambiguous, sign test over items)", "",
-                  "| Model | Hypothesis | p | Holm p |", "|---|---|---|---|"]
-        for (model, h, p), q in zip(primary, adj):
-            hyp = "H1: more «woman» under fem" if h == "woman" else "H2: more «man» under masc"
-            lines.append(f"| {model} | {hyp} | {fmt_p(p)} | {fmt_p(q)} |")
-            rows.append(dict(model=model, kind="primary", a="fem", b="masc",
-                             test=f"{h}: Holm p", value=q))
+                  "Holm within each family. A model replicates the effect if H1 and H2 both",
+                  "hold at Holm p < 0.05 in the predicted direction.", "",
+                  "| Family | Model | Hypothesis | Predicted direction | p | Holm p |",
+                  "|---|---|---|---|---|---|"]
+        verdicts = []
+        for fam in FAMILIES:
+            tests = [t for t in primary if t[0] in fam]
+            for (model, h, p, ok), q in zip(tests, holm([t[2] for t in tests])):
+                hyp = "H1: more «woman» under fem" if h == "woman" else "H2: more «man» under masc"
+                lines.append(f"| {' + '.join(fam)} | {model} | {hyp} | {'yes' if ok else 'no'} "
+                             f"| {fmt_p(p)} | {fmt_p(q)} |")
+                rows.append(dict(model=model, kind="primary", a="fem", b="masc",
+                                 test=f"{h}: Holm p", value=q))
+                verdicts.append((model, ok and q < 0.05))
         lines += ["", "H2 is tested as fem vs. masc «man» answers: a < b supports it.", ""]
+        for model in [m for m in MODELS if any(v[0] == m for v in verdicts)]:
+            both = all(ok for m, ok in verdicts if m == model)
+            lines.append(f"- {model}: {'both hypotheses hold' if both else 'not both hypotheses hold'}")
+        lines.append("")
     lines += ["## Notes", ""]
     lines += [f"- Re-detected `{n}`: undetected {x} → {y}, {c} rows changed"
               for n, x, y, c in outputs.redetected]

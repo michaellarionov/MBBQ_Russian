@@ -43,9 +43,9 @@ RUN_MBBQ = Path(__file__).resolve().parent / "run_mbbq.py"
 SUBSETS = ["Age", "Disability_status", "Gender_identity",
            "Physical_appearance", "SES", "Sexual_orientation"]
 LANGS = ["en", "nl", "es", "tr"]
-# Copied from ask_model_paper.PAPER_MODELS so --help works without torch;
+# Copied from ask_model_paper.MODELS so --help works without torch;
 # main() checks they agree.
-MODELS = ["mistral", "zephyr"]
+MODELS = ["mistral", "zephyr", "qwen", "tlite"]
 # Columns mbbq.py derives from the data; must match a full-run reference.
 KEY_COLS = ["subset", "example_id", "q_id", "question", "context_condition",
             "unknown_loc", "labels", "prompt_id", "target_loc"]
@@ -123,8 +123,20 @@ class Asker:
             print(f"GPU: {check_gpu()}")
             path = snapshot_download(self.cfg["hf_model"], revision=self.cfg["revision"],
                                      allow_patterns=WEIGHTS)
-            self.pipe = ask_model_paper.load_model(path)
+            self.pipe = ask_model_paper.load_model(path, self.cfg.get("padding_side"))
         return ask_model_paper.ask(self.pipe, self.cfg, questions, self.bs)
+
+
+def settings_for(model, cfg, bs):
+    """What the work-folder stamp records. Keys that only the replication models
+    have are added only for them, so the paper models' stamps stay as they were
+    and their runs still resume."""
+    settings = dict(model=model, hf_model=cfg["hf_model"], revision=cfg["revision"],
+                    prompt=cfg["prompt"], max_new_tokens=cfg["max_new_tokens"], bs=bs)
+    for k in ("padding_side", "generate_kwargs"):
+        if k in cfg:
+            settings[k] = cfg[k]
+    return settings
 
 
 def run_one(args, lang, control, asker):
@@ -188,12 +200,11 @@ def main():
 
     import torch
     import transformers
-    from ask_model_paper import PAPER_MODELS
-    assert sorted(PAPER_MODELS) == sorted(MODELS), "update MODELS"
-    cfg = PAPER_MODELS[args.model]
+    import ask_model_paper
+    assert sorted(ask_model_paper.MODELS) == sorted(MODELS), "update MODELS"
+    cfg = ask_model_paper.MODELS[args.model]
     bs = args.bs or cfg["bs"]
-    settings = dict(model=args.model, hf_model=cfg["hf_model"], revision=cfg["revision"],
-                    prompt=cfg["prompt"], max_new_tokens=cfg["max_new_tokens"], bs=bs)
+    settings = settings_for(args.model, cfg, bs)
 
     work, results = Path(args.work_dir), Path(args.results_dir)
     work.mkdir(parents=True, exist_ok=True)

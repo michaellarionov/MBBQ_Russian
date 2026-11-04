@@ -112,6 +112,20 @@ The pinned revisions' chat templates render exactly these prompt strings.
 | `max_new_tokens` | 1000 | 256 |
 | Batch size | 16 | 32 |
 
+### Replication models (not from the paper)
+
+For the gender-leak replication only (Gender_identity `ru`, `ru_masc`,
+`ru_fem`; `docs/DECISIONS.md`, "Replication on two more models"). Set in
+`REPLICATION_MODELS` in `generation/ask_model_paper.py`; run with the
+notebook's "Replication models" section.
+
+| | Qwen2.5-7B-Instruct (`qwen`) | T-lite-it-1.0 (`tlite`) |
+|---|---|---|
+| Commit | `a09a35458c702b33eeacc393d103063234e8bc28` (2025-01-12) | `fbabc76f32140416dc5b0ceef392c7778eec1312` (2024-12-13) |
+| Prompt | Own chat template, one user turn (includes Qwen's default system prompt) | Own chat template, one user turn |
+| Decoding | Greedy, bf16, `repetition_penalty=1.0` (ships 1.05), left padding | Same |
+| `max_new_tokens`, batch size | 512, 16 | 512, 16 |
+
 ## Run record
 
 ### Mistral (Oct 2026, Colab, `MyDrive/mbbq_paper`)

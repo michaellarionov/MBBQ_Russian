@@ -45,7 +45,7 @@ sys.path[:0] = [str(ROOT), str(ROOT / "my_research" / "detection"),
 
 import answer_detection as ad  # noqa: E402  (upstream)
 import ru_detection  # noqa: E402
-from ask_model_paper import PAPER_MODELS  # noqa: E402
+from ask_model_paper import MODELS  # noqa: E402
 from mbbq_scorer import annotate, attach_polarity, flip_target_loc, score  # noqa: E402
 from run_step6 import KEY_COLS, SUBSETS  # noqa: E402
 
@@ -109,7 +109,7 @@ def head(title):
 def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("pickle")
-    ap.add_argument("--model", required=True, choices=PAPER_MODELS)
+    ap.add_argument("--model", required=True, choices=MODELS)
     ap.add_argument("--lang", required=True)
     ap.add_argument("--control", action="store_true")
     ap.add_argument("--data", help="folder with the data the run used (default: see above)")
@@ -120,7 +120,7 @@ def main():
 
 
 def check(args, tmp):
-    cfg = PAPER_MODELS[args.model]
+    cfg = MODELS[args.model]
     df = pd.read_pickle(args.pickle)
     subsets = [s for s in SUBSETS if s in set(df["subset"])]
 

@@ -12,6 +12,13 @@ Both: greedy (do_sample=False, num_beams=1), bf16, full text returned and the
 answer split off after the prompt, as models.py did. The tokenizer adds its own
 BOS, so Mistral prompts start with two BOS tokens, also as in models.py. Model
 revisions are the last HF commits before the March 2024 runs.
+
+REPLICATION_MODELS are not from the paper: newer models for the gender-leak
+replication (DECISIONS.md, "Replication on two more models"). Each prompt is
+the model's own chat template for one user turn; decoding is greedy, as above,
+with repetition_penalty=1.0 (both ship 1.05) and left padding (the Qwen2
+tokenizer has no padding side of its own in transformers 4.39.3, and right
+padding breaks batched generation).
 """
 import torch
 from datasets import Dataset
@@ -39,10 +46,39 @@ PAPER_MODELS = {
     ),
 }
 
+REPLICATION_MODELS = {
+    "qwen": dict(
+        hf_model="Qwen/Qwen2.5-7B-Instruct",
+        revision="a09a35458c702b33eeacc393d103063234e8bc28",  # 2025-01-12
+        # the template adds Qwen's default system prompt when none is given
+        prompt="<|im_start|>system\nYou are Qwen, created by Alibaba Cloud. You are a "
+               "helpful assistant.<|im_end|>\n<|im_start|>user\n{}<|im_end|>\n"
+               "<|im_start|>assistant\n",
+        max_new_tokens=512,
+        bs=16,
+        splits=["<|im_start|>assistant\n"],
+        padding_side="left",
+        generate_kwargs=dict(repetition_penalty=1.0),
+    ),
+    "tlite": dict(
+        hf_model="t-tech/T-lite-it-1.0",
+        revision="fbabc76f32140416dc5b0ceef392c7778eec1312",  # 2024-12-13
+        prompt="<|im_start|>user\n{}<|im_end|>\n<|im_start|>assistant\n",
+        max_new_tokens=512,
+        bs=16,
+        splits=["<|im_start|>assistant\n"],
+        padding_side="left",
+        generate_kwargs=dict(repetition_penalty=1.0),
+    ),
+}
+MODELS = {**PAPER_MODELS, **REPLICATION_MODELS}
 
-def load_model(model_path):
+
+def load_model(model_path, padding_side=None):
     pipe = pipeline("text-generation", model=model_path,
                     torch_dtype=torch.bfloat16, device_map="auto")
+    if padding_side:  # REPLICATION_MODELS; the paper models keep the tokenizer's
+        pipe.tokenizer.padding_side = padding_side
     # Mistral has no pad token (models.py set it to EOS); Zephyr's is EOS.
     if pipe.tokenizer.pad_token_id is None:
         pipe.tokenizer.pad_token_id = pipe.model.config.eos_token_id
@@ -65,6 +101,6 @@ def ask(pipe, cfg, questions, bs):
                max_new_tokens=cfg["max_new_tokens"], do_sample=False, num_beams=1,
                # what generate() falls back to anyway; passing it avoids a
                # warning per batch
-               pad_token_id=pipe.tokenizer.pad_token_id)
+               pad_token_id=pipe.tokenizer.pad_token_id, **cfg.get("generate_kwargs", {}))
     return [split_answer(r[0]["generated_text"], cfg["splits"])
             for r in tqdm(out, total=len(ds))]
