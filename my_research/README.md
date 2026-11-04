@@ -125,6 +125,7 @@ notebook's "Replication models" section.
 | Prompt | Own chat template, one user turn (includes Qwen's default system prompt) | Own chat template, one user turn |
 | Decoding | Greedy, bf16, `repetition_penalty=1.0` (ships 1.05), left padding | Same |
 | `max_new_tokens`, batch size | 512, 16 | 512, 16 |
+| `transformers` | 4.46.3 (its `tokenizer.json` needs `tokenizers` ≥ 0.20) | 4.46.3 |
 
 ## Run record
 

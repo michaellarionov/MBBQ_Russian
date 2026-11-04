@@ -133,7 +133,7 @@ def settings_for(model, cfg, bs):
     and their runs still resume."""
     settings = dict(model=model, hf_model=cfg["hf_model"], revision=cfg["revision"],
                     prompt=cfg["prompt"], max_new_tokens=cfg["max_new_tokens"], bs=bs)
-    for k in ("padding_side", "generate_kwargs"):
+    for k in ("padding_side", "generate_kwargs", "transformers"):
         if k in cfg:
             settings[k] = cfg[k]
     return settings
@@ -205,6 +205,9 @@ def main():
     cfg = ask_model_paper.MODELS[args.model]
     bs = args.bs or cfg["bs"]
     settings = settings_for(args.model, cfg, bs)
+    if cfg.get("transformers", transformers.__version__) != transformers.__version__:
+        sys.exit(f"{args.model} needs transformers=={cfg['transformers']}, not "
+                 f"{transformers.__version__} (notebook: TRANSFORMERS_PIN, set from MODEL_KEY).")
 
     work, results = Path(args.work_dir), Path(args.results_dir)
     work.mkdir(parents=True, exist_ok=True)

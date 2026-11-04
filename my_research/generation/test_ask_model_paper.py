@@ -95,3 +95,4 @@ def test_paper_settings_stamp_unchanged():
             "model", "hf_model", "revision", "prompt", "max_new_tokens", "bs"]
     s = settings_for("tlite", REPLICATION_MODELS["tlite"], 16)
     assert s["padding_side"] == "left" and s["generate_kwargs"] == {"repetition_penalty": 1.0}
+    assert s["transformers"] == "4.46.3"

@@ -18,7 +18,8 @@ replication (DECISIONS.md, "Replication on two more models"). Each prompt is
 the model's own chat template for one user turn; decoding is greedy, as above,
 with repetition_penalty=1.0 (both ship 1.05) and left padding (the Qwen2
 tokenizer has no padding side of its own in transformers 4.39.3, and right
-padding breaks batched generation).
+padding breaks batched generation). They need transformers 4.46.3: their
+tokenizer.json files were saved by a newer `tokenizers` than 4.39.3's.
 """
 import torch
 from datasets import Dataset
@@ -59,6 +60,7 @@ REPLICATION_MODELS = {
         splits=["<|im_start|>assistant\n"],
         padding_side="left",
         generate_kwargs=dict(repetition_penalty=1.0),
+        transformers="4.46.3",  # 4.39.3's tokenizers can't read its tokenizer.json
     ),
     "tlite": dict(
         hf_model="t-tech/T-lite-it-1.0",
@@ -69,6 +71,7 @@ REPLICATION_MODELS = {
         splits=["<|im_start|>assistant\n"],
         padding_side="left",
         generate_kwargs=dict(repetition_penalty=1.0),
+        transformers="4.46.3",  # 4.39.3's tokenizers can't read its tokenizer.json
     ),
 }
 MODELS = {**PAPER_MODELS, **REPLICATION_MODELS}
