@@ -40,16 +40,62 @@ ambiguous answers.
 | masc vs. main | descriptive | 22.0% | 16 / 24, 0.27 | 17 / 10, 0.25 | 6 / 6, 0.43 | +0.039, 0.82 | +0.039, 0.81 |
 | fem vs. main | descriptive | 29.1% | 36 / 4, 1.9e-07 | 6 / 22, 0.0037 | 13 / 1, 0.0012 | +0.168, 0.017 | -0.207, 0.0015 |
 
+## Qwen (144 items, 720 rows per set)
+
+| Set | Undetected | Woman | Man | Unknown | Acc_A | Bias_A pub | Bias_A corr | Acc_D | Acc_D gold woman | Acc_D gold man |
+|---|---|---|---|---|---|---|---|---|---|---|
+| main | 4 | 0.008 | 0.003 | 0.989 | 0.988 | 0.0000 | 0.0059 | 0.738 | 0.717 | 0.706 |
+| masc | 0 | 0.003 | 0.003 | 0.994 | 0.994 | -0.0059 | 0.0059 | 0.707 | 0.667 | 0.700 |
+| fem | 1 | 0.025 | 0.000 | 0.975 | 0.974 | -0.0088 | 0.0088 | 0.652 | 0.767 | 0.497 |
+| masc_rerun | 0 | 0.003 | 0.003 | 0.994 | 0.994 | -0.0059 | 0.0059 | 0.707 | 0.667 | 0.700 |
+
+| a vs. b | Role | Answers changed | «Woman»: items a>b / a<b, p | «Man»: items a>b / a<b, p | Templates «woman» a>b / a<b, Wilcoxon p | Acc_D gold woman: diff, p | Acc_D gold man: diff, p |
+|---|---|---|---|---|---|---|---|
+| fem vs. masc | primary | 9.6% | 7 / 0, 0.016 | 0 / 1, 1 | 7 / 0, 0.016 | +0.100, 0.0039 | -0.201, 1.4e-04 |
+| masc_rerun vs. masc | noise floor | 0.0% | 0 / 0, 1 | 0 / 0, 1 | 0 / 0, 1 | +0.000, 1 | +0.000, 1 |
+| fem vs. masc_rerun | secondary | 9.6% | 7 / 0, 0.016 | 0 / 1, 1 | 7 / 0, 0.016 | +0.100, 0.0039 | -0.201, 1.4e-04 |
+| masc vs. main | descriptive | 6.1% | 1 / 2, 1 | 1 / 1, 1 | 1 / 2, 0.75 | -0.050, 0.29 | -0.006, 1 |
+| fem vs. main | descriptive | 9.7% | 6 / 1, 0.12 | 0 / 1, 1 | 5 / 0, 0.062 | +0.050, 0.07 | -0.207, 4.0e-04 |
+
+## Tlite (144 items, 720 rows per set)
+
+| Set | Undetected | Woman | Man | Unknown | Acc_A | Bias_A pub | Bias_A corr | Acc_D | Acc_D gold woman | Acc_D gold man |
+|---|---|---|---|---|---|---|---|---|---|---|
+| main | 1 | 0.006 | 0.003 | 0.992 | 0.991 | 0.0029 | -0.0029 | 0.746 | 0.777 | 0.689 |
+| masc | 0 | 0.008 | 0.011 | 0.981 | 0.979 | -0.0029 | 0.0088 | 0.726 | 0.744 | 0.683 |
+| fem | 0 | 0.050 | 0.003 | 0.947 | 0.944 | 0.0441 | 0.0206 | 0.707 | 0.789 | 0.611 |
+| masc_rerun | 0 | 0.008 | 0.011 | 0.981 | 0.979 | -0.0029 | 0.0088 | 0.726 | 0.744 | 0.683 |
+
+| a vs. b | Role | Answers changed | «Woman»: items a>b / a<b, p | «Man»: items a>b / a<b, p | Templates «woman» a>b / a<b, Wilcoxon p | Acc_D gold woman: diff, p | Acc_D gold man: diff, p |
+|---|---|---|---|---|---|---|---|
+| fem vs. masc | primary | 5.7% | 9 / 1, 0.021 | 0 / 2, 0.5 | 4 / 1, 0.12 | +0.044, 0.12 | -0.072, 0.002 |
+| masc_rerun vs. masc | noise floor | 0.0% | 0 / 0, 1 | 0 / 0, 1 | 0 / 0, 1 | +0.000, 1 | +0.000, 1 |
+| fem vs. masc_rerun | secondary | 5.7% | 9 / 1, 0.021 | 0 / 2, 0.5 | 4 / 1, 0.12 | +0.044, 0.12 | -0.072, 0.002 |
+| masc vs. main | descriptive | 5.6% | 2 / 1, 1 | 2 / 0, 0.5 | 1 / 0, 1 | -0.034, 0.69 | -0.006, 1 |
+| fem vs. main | descriptive | 9.2% | 8 / 0, 0.0078 | 1 / 1, 1 | 4 / 0, 0.12 | +0.011, 0.75 | -0.078, 0.065 |
+
 ## Primary tests (fem vs. masc, ambiguous, sign test over items)
 
-| Model | Hypothesis | p | Holm p |
-|---|---|---|---|
-| mistral | H1: more «woman» under fem | 0.18 | 0.36 |
-| mistral | H2: more «man» under masc | 0.34 | 0.36 |
-| zephyr | H1: more «woman» under fem | 1.8e-06 | 7.3e-06 |
-| zephyr | H2: more «man» under masc | 1.9e-05 | 5.8e-05 |
+Holm within each family. A model replicates the effect if H1 and H2 both
+hold at Holm p < 0.05 in the predicted direction.
+
+| Family | Model | Hypothesis | Predicted direction | p | Holm p |
+|---|---|---|---|---|---|
+| mistral + zephyr | mistral | H1: more «woman» under fem | yes | 0.18 | 0.36 |
+| mistral + zephyr | mistral | H2: more «man» under masc | yes | 0.34 | 0.36 |
+| mistral + zephyr | zephyr | H1: more «woman» under fem | yes | 1.8e-06 | 7.3e-06 |
+| mistral + zephyr | zephyr | H2: more «man» under masc | yes | 1.9e-05 | 5.8e-05 |
+| qwen + tlite | qwen | H1: more «woman» under fem | yes | 0.016 | 0.062 |
+| qwen + tlite | qwen | H2: more «man» under masc | yes | 1 | 1 |
+| qwen + tlite | tlite | H1: more «woman» under fem | yes | 0.021 | 0.064 |
+| qwen + tlite | tlite | H2: more «man» under masc | yes | 0.5 | 1 |
 
 H2 is tested as fem vs. masc «man» answers: a < b supports it.
+
+- mistral: not both hypotheses hold
+- zephyr: both hypotheses hold
+- qwen: not both hypotheses hold
+- tlite: not both hypotheses hold
 
 ## Notes
 
@@ -61,3 +107,11 @@ H2 is tested as fem vs. masc «man» answers: a < b supports it.
 - Re-detected `zephyr_ru_masc.pkl`: undetected 3 → 3, 0 rows changed
 - Re-detected `zephyr_ru_fem.pkl`: undetected 3 → 3, 0 rows changed
 - Re-detected `zephyr_ru_masc_rerun.pkl`: undetected 4 → 4, 0 rows changed
+- Re-detected `qwen_ru.pkl`: undetected 7 → 7, 0 rows changed
+- Re-detected `qwen_ru_masc.pkl`: undetected 0 → 0, 0 rows changed
+- Re-detected `qwen_ru_fem.pkl`: undetected 2 → 2, 0 rows changed
+- Re-detected `qwen_ru_masc_rerun.pkl`: undetected 0 → 0, 0 rows changed
+- Re-detected `tlite_ru.pkl`: undetected 2 → 2, 0 rows changed
+- Re-detected `tlite_ru_masc.pkl`: undetected 0 → 0, 0 rows changed
+- Re-detected `tlite_ru_fem.pkl`: undetected 0 → 0, 0 rows changed
+- Re-detected `tlite_ru_masc_rerun.pkl`: undetected 0 → 0, 0 rows changed

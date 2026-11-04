@@ -30,8 +30,9 @@ from fem_analysis import (DATA_FILE, KEY, MODELS, classify, fmt_p, option_gender
 from mbbq_scorer import NO_TARGET, flip_target_loc  # noqa: E402
 from score_both_signs import Outputs  # noqa: E402
 
-SETS = ["masc", "fem", "masc_rerun"]
-PAIRS = [("fem", "masc", "fem vs. masc"), ("masc_rerun", "masc", "noise floor: masc_rerun vs. masc")]
+SETS = ["masc", "fem", "masc_rerun", "masc_batch"]
+PAIRS = [("fem", "masc", "fem vs. masc"), ("masc_rerun", "masc", "noise floor: masc_rerun vs. masc"),
+         ("masc_batch", "masc", "noise floor: masc_batch (half batch size) vs. masc")]
 GENDER_NAME = {"f": "woman", "m": "man"}
 
 
