@@ -1,0 +1,13 @@
+model,comparison,gold_woman_n_pairs,gold_woman_estimate_pts,gold_woman_ci95_low,gold_woman_ci95_high,gold_man_n_pairs,gold_man_estimate_pts,gold_man_ci95_low,gold_man_ci95_high,n_templates
+mistral,masc vs neutral,180,3.9,-2.0,9.4,180,4.4,-2.4,12.8,17
+mistral,fem vs masc,180,8.9,3.5,14.7,180,-9.4,-18.2,-2.2,17
+mistral,rerun vs masc,180,-0.6,-2.4,1.2,180,1.7,0.0,3.5,17
+zephyr,masc vs neutral,179,3.9,-3.5,11.7,178,3.9,-5.1,13.3,17
+zephyr,fem vs masc,178,12.9,4.2,21.4,179,-24.6,-35.8,-14.1,17
+zephyr,rerun vs masc,179,1.1,-1.8,4.2,179,-0.6,-2.4,1.2,17
+qwen,masc vs neutral,180,-5.0,-11.0,0.0,180,-0.6,-5.6,4.2,17
+qwen,fem vs masc,180,10.0,4.1,16.7,179,-20.1,-31.6,-10.6,17
+qwen,rerun vs masc,180,0.0,0.0,0.0,180,0.0,0.0,0.0,17
+tlite,masc vs neutral,179,-3.4,-8.8,1.2,180,-0.6,-8.8,7.8,17
+tlite,fem vs masc,180,4.4,0.0,9.0,180,-7.2,-12.6,-3.2,17
+tlite,rerun vs masc,180,0.0,0.0,0.0,180,0.0,0.0,0.0,17

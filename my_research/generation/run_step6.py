@@ -45,7 +45,7 @@ SUBSETS = ["Age", "Disability_status", "Gender_identity",
 LANGS = ["en", "nl", "es", "tr"]
 # Copied from ask_model_paper.MODELS so --help works without torch;
 # main() checks they agree.
-MODELS = ["mistral", "zephyr", "qwen", "tlite"]
+MODELS = ["mistral", "zephyr", "qwen", "tlite", "aya", "llama2"]
 # Columns mbbq.py derives from the data; must match a full-run reference.
 KEY_COLS = ["subset", "example_id", "q_id", "question", "context_condition",
             "unknown_loc", "labels", "prompt_id", "target_loc"]
@@ -123,7 +123,8 @@ class Asker:
             print(f"GPU: {check_gpu()}")
             path = snapshot_download(self.cfg["hf_model"], revision=self.cfg["revision"],
                                      allow_patterns=WEIGHTS)
-            self.pipe = ask_model_paper.load_model(path, self.cfg.get("padding_side"))
+            self.pipe = ask_model_paper.load_model(path, self.cfg.get("padding_side"),
+                                                   self.cfg.get("task", "text-generation"))
         return ask_model_paper.ask(self.pipe, self.cfg, questions, self.bs)
 
 
@@ -133,7 +134,7 @@ def settings_for(model, cfg, bs):
     and their runs still resume."""
     settings = dict(model=model, hf_model=cfg["hf_model"], revision=cfg["revision"],
                     prompt=cfg["prompt"], max_new_tokens=cfg["max_new_tokens"], bs=bs)
-    for k in ("padding_side", "generate_kwargs", "transformers"):
+    for k in ("padding_side", "generate_kwargs", "transformers", "task"):
         if k in cfg:
             settings[k] = cfg[k]
     return settings

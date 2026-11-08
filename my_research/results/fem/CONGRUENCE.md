@@ -68,6 +68,36 @@ By the template's target gender:
 | man | stereotype-inconsistent | 90 | 0.356 → 0.378 | 2 / 0 | 0.5 |
 | man | stereotype-consistent | 85 | 0.800 → 0.812 | 1 / 0 | 1 |
 
+## Mistral, noise floor: masc_batch (half batch size) vs. masc
+
+### Ambiguous contexts
+
+| Question | Rows | «Woman» masc → masc_batch | Stereotyped answer masc → masc_batch | Items up / down | p |
+|---|---|---|---|---|---|
+| incongruent | 170 | 0.071 → 0.065 | 0.059 → 0.059 | 0 / 1 | 1 |
+| congruent | 180 | 0.122 → 0.117 | 0.122 → 0.117 | 0 / 1 | 1 |
+
+- Shift toward «woman», congruent minus incongruent, per template: larger when congruent in 1 of 16 templates, smaller in 0; mean shift +0.000 (congruent) vs. -0.006 (incongruent); per-template difference +0.000 to +0.100; Wilcoxon p = 1.
+- All ambiguous answers: stereotyped 0.091 → 0.089, anti-stereotyped 0.057 → 0.057.
+
+By the template's target gender:
+
+| Target | Question | Templates | Rows | «Woman» masc → masc_batch |
+|---|---|---|---|---|
+| woman | incongruent | 10 | 100 | 0.060 → 0.060 |
+| woman | congruent | 11 | 110 | 0.091 → 0.082 |
+| man | incongruent | 6 | 70 | 0.086 → 0.071 |
+| man | congruent | 6 | 70 | 0.171 → 0.171 |
+
+### Disambiguated contexts
+
+| Gold | Context | Rows | Accuracy masc → masc_batch | Items up / down | p |
+|---|---|---|---|---|---|
+| woman | stereotype-inconsistent | 85 | 0.671 → 0.671 | 1 / 1 | 1 |
+| woman | stereotype-consistent | 90 | 0.489 → 0.478 | 0 / 1 | 1 |
+| man | stereotype-inconsistent | 90 | 0.356 → 0.356 | 0 / 0 | 1 |
+| man | stereotype-consistent | 85 | 0.800 → 0.812 | 1 / 0 | 1 |
+
 ## Zephyr, fem vs. masc
 
 ### Ambiguous contexts
@@ -127,6 +157,36 @@ By the template's target gender:
 | woman | stereotype-consistent | 90 | 0.600 → 0.633 | 3 / 0 | 0.25 |
 | man | stereotype-inconsistent | 90 | 0.444 → 0.433 | 0 / 1 | 1 |
 | man | stereotype-consistent | 84 | 0.714 → 0.714 | 1 / 1 | 1 |
+
+## Zephyr, noise floor: masc_batch (half batch size) vs. masc
+
+### Ambiguous contexts
+
+| Question | Rows | «Woman» masc → masc_batch | Stereotyped answer masc → masc_batch | Items up / down | p |
+|---|---|---|---|---|---|
+| incongruent | 170 | 0.182 → 0.200 | 0.288 → 0.288 | 4 / 1 | 0.38 |
+| congruent | 179 | 0.302 → 0.302 | 0.302 → 0.302 | 3 / 3 | 1 |
+
+- Shift toward «woman», congruent minus incongruent, per template: larger when congruent in 3 of 16 templates, smaller in 5; mean shift +0.003 (congruent) vs. +0.022 (incongruent); per-template difference -0.200 to +0.100; Wilcoxon p = 0.56.
+- All ambiguous answers: stereotyped 0.295 → 0.295, anti-stereotyped 0.158 → 0.160.
+
+By the template's target gender:
+
+| Target | Question | Templates | Rows | «Woman» masc → masc_batch |
+|---|---|---|---|---|
+| woman | incongruent | 10 | 100 | 0.200 → 0.230 |
+| woman | congruent | 11 | 109 | 0.220 → 0.229 |
+| man | incongruent | 6 | 70 | 0.157 → 0.157 |
+| man | congruent | 6 | 70 | 0.429 → 0.414 |
+
+### Disambiguated contexts
+
+| Gold | Context | Rows | Accuracy masc → masc_batch | Items up / down | p |
+|---|---|---|---|---|---|
+| woman | stereotype-inconsistent | 84 | 0.690 → 0.702 | 2 / 1 | 1 |
+| woman | stereotype-consistent | 90 | 0.600 → 0.611 | 2 / 1 | 1 |
+| man | stereotype-inconsistent | 89 | 0.438 → 0.438 | 0 / 0 | 1 |
+| man | stereotype-consistent | 84 | 0.714 → 0.714 | 0 / 0 | 1 |
 
 ## Qwen, fem vs. masc
 
@@ -188,6 +248,36 @@ By the template's target gender:
 | man | stereotype-inconsistent | 90 | 0.556 → 0.556 | 0 / 0 | 1 |
 | man | stereotype-consistent | 85 | 0.847 → 0.847 | 0 / 0 | 1 |
 
+## Qwen, noise floor: masc_batch (half batch size) vs. masc
+
+### Ambiguous contexts
+
+| Question | Rows | «Woman» masc → masc_batch | Stereotyped answer masc → masc_batch | Items up / down | p |
+|---|---|---|---|---|---|
+| incongruent | 170 | 0.000 → 0.000 | 0.006 → 0.006 | 0 / 0 | 1 |
+| congruent | 180 | 0.006 → 0.006 | 0.006 → 0.006 | 0 / 0 | 1 |
+
+- Shift toward «woman», congruent minus incongruent, per template: larger when congruent in 0 of 16 templates, smaller in 0; mean shift +0.000 (congruent) vs. +0.000 (incongruent); per-template difference +0.000 to +0.000; Wilcoxon p = 1.
+- All ambiguous answers: stereotyped 0.006 → 0.006, anti-stereotyped 0.000 → 0.003.
+
+By the template's target gender:
+
+| Target | Question | Templates | Rows | «Woman» masc → masc_batch |
+|---|---|---|---|---|
+| woman | incongruent | 10 | 100 | 0.000 → 0.000 |
+| woman | congruent | 11 | 110 | 0.000 → 0.000 |
+| man | incongruent | 6 | 70 | 0.000 → 0.000 |
+| man | congruent | 6 | 70 | 0.014 → 0.014 |
+
+### Disambiguated contexts
+
+| Gold | Context | Rows | Accuracy masc → masc_batch | Items up / down | p |
+|---|---|---|---|---|---|
+| woman | stereotype-inconsistent | 85 | 0.659 → 0.659 | 0 / 0 | 1 |
+| woman | stereotype-consistent | 90 | 0.656 → 0.678 | 2 / 0 | 0.5 |
+| man | stereotype-inconsistent | 90 | 0.556 → 0.556 | 1 / 1 | 1 |
+| man | stereotype-consistent | 85 | 0.847 → 0.835 | 0 / 1 | 1 |
+
 ## Tlite, fem vs. masc
 
 ### Ambiguous contexts
@@ -242,6 +332,36 @@ By the template's target gender:
 ### Disambiguated contexts
 
 | Gold | Context | Rows | Accuracy masc → masc_rerun | Items up / down | p |
+|---|---|---|---|---|---|
+| woman | stereotype-inconsistent | 85 | 0.812 → 0.812 | 0 / 0 | 1 |
+| woman | stereotype-consistent | 90 | 0.667 → 0.667 | 0 / 0 | 1 |
+| man | stereotype-inconsistent | 90 | 0.567 → 0.567 | 0 / 0 | 1 |
+| man | stereotype-consistent | 85 | 0.835 → 0.835 | 0 / 0 | 1 |
+
+## Tlite, noise floor: masc_batch (half batch size) vs. masc
+
+### Ambiguous contexts
+
+| Question | Rows | «Woman» masc → masc_batch | Stereotyped answer masc → masc_batch | Items up / down | p |
+|---|---|---|---|---|---|
+| incongruent | 170 | 0.000 → 0.000 | 0.012 → 0.012 | 0 / 0 | 1 |
+| congruent | 180 | 0.017 → 0.011 | 0.017 → 0.011 | 0 / 1 | 1 |
+
+- Shift toward «woman», congruent minus incongruent, per template: larger when congruent in 0 of 16 templates, smaller in 1; mean shift -0.006 (congruent) vs. +0.000 (incongruent); per-template difference -0.100 to +0.000; Wilcoxon p = 1.
+- All ambiguous answers: stereotyped 0.014 → 0.011, anti-stereotyped 0.006 → 0.006.
+
+By the template's target gender:
+
+| Target | Question | Templates | Rows | «Woman» masc → masc_batch |
+|---|---|---|---|---|
+| woman | incongruent | 10 | 100 | 0.000 → 0.000 |
+| woman | congruent | 11 | 110 | 0.018 → 0.018 |
+| man | incongruent | 6 | 70 | 0.000 → 0.000 |
+| man | congruent | 6 | 70 | 0.014 → 0.000 |
+
+### Disambiguated contexts
+
+| Gold | Context | Rows | Accuracy masc → masc_batch | Items up / down | p |
 |---|---|---|---|---|---|
 | woman | stereotype-inconsistent | 85 | 0.812 → 0.812 | 0 / 0 | 1 |
 | woman | stereotype-consistent | 90 | 0.667 → 0.667 | 0 / 0 | 1 |

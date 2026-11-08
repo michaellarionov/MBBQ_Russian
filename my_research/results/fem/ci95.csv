@@ -1,0 +1,13 @@
+model,comparison,n_pairs,n_templates,estimate_pts,ci95_low,ci95_high
+mistral,masc vs neutral,360,17,-3.1,-7.4,0.3
+mistral,fem vs masc,360,17,-4.7,-10.5,-0.3
+mistral,rerun vs masc,360,17,1.1,0.0,2.6
+zephyr,masc vs neutral,358,17,4.7,-2.1,13.1
+zephyr,fem vs masc,357,17,-28.6,-40.4,-16.6
+zephyr,rerun vs masc,358,17,0.0,-2.1,2.1
+qwen,masc vs neutral,356,17,0.6,-0.5,1.7
+qwen,fem vs masc,359,17,-2.5,-4.1,-1.2
+qwen,rerun vs masc,360,17,0.0,0.0,0.0
+tlite,masc vs neutral,359,17,0.6,-0.6,2.1
+tlite,fem vs masc,360,17,-5.0,-11.2,-0.3
+tlite,rerun vs masc,360,17,0.0,0.0,0.0

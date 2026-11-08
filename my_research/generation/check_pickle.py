@@ -198,7 +198,8 @@ def check_lengths(tok, cfg, df, ans, is_str):
     print(f"answer tokens (re-tokenized, may differ from the generated count by a few): "
           f"median {n_tok.median():.0f}, p99 {n_tok.quantile(0.99):.0f}, max {n_tok.max()}; "
           f"cap {cap}")
-    print(f"answers with >= {cap - 5} tokens (likely truncated): {(n_tok >= cap - 5).sum()}")
+    if cap is not None:  # Llama-2: no cap of its own (models.py set none)
+        print(f"answers with >= {cap - 5} tokens (likely truncated): {(n_tok >= cap - 5).sum()}")
     q_tok = pd.Series([len(t) for t in tok([cfg["prompt"].format(q) for q in df["question"]])["input_ids"]])
     print(f"prompt tokens: median {q_tok.median():.0f}, max {q_tok.max()}")
 

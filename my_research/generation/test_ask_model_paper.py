@@ -1,6 +1,6 @@
 import pytest
 
-from ask_model_paper import PAPER_MODELS, REPLICATION_MODELS, ask, split_answer
+from ask_model_paper import FIFTH_MODELS, PAPER_MODELS, REPLICATION_MODELS, ask, split_answer
 from run_step6 import settings_for
 
 
@@ -96,3 +96,37 @@ def test_paper_settings_stamp_unchanged():
     s = settings_for("tlite", REPLICATION_MODELS["tlite"], 16)
     assert s["padding_side"] == "left" and s["generate_kwargs"] == {"repetition_penalty": 1.0}
     assert s["transformers"] == "4.46.3"
+
+
+class FakeText2Text(FakePipe):
+    """text2text-generation returns only the generated text."""
+
+    def __call__(self, prompts, **kw):
+        self.calls.append(kw)
+        return ([{"generated_text": self.continuation}] for p in prompts)
+
+
+def test_aya_paper_settings():
+    # models.py at 20ae39b: text2text-generation, bare question, 128 tokens, bs 8
+    pipe = FakeText2Text("Б) Иван")
+    cfg = FIFTH_MODELS["aya"]
+    assert cfg["task"] == "text2text-generation" and cfg["prompt"].format("Q {x}") == "Q {x}"
+    assert ask(pipe, cfg, ["Q1", "Q2"], bs=8) == ["Б) Иван"] * 2
+    kw = pipe.calls[0]
+    assert kw["max_new_tokens"] == 128 and kw["batch_size"] == 8
+    assert kw["do_sample"] is False and kw["num_beams"] == 1
+
+
+def test_llama2_paper_settings_pass_no_token_cap():
+    pipe = FakePipe(" (C) Неизвестно")
+    cfg = FIFTH_MODELS["llama2"]
+    assert ask(pipe, cfg, ["Q"], bs=4) == [" (C) Неизвестно"]
+    kw = pipe.calls[0]
+    assert "max_new_tokens" not in kw and kw["batch_size"] == 4 and kw["do_sample"] is False
+    assert cfg["prompt"].format("Q") == "<s>[INST] Q [/INST]"
+
+
+def test_fifth_model_stamp_records_the_task():
+    s = settings_for("aya", FIFTH_MODELS["aya"], 8)
+    assert s["task"] == "text2text-generation" and s["max_new_tokens"] == 128
+    assert "task" not in settings_for("mistral", PAPER_MODELS["mistral"], 16)

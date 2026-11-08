@@ -20,6 +20,18 @@ with repetition_penalty=1.0 (both ship 1.05) and left padding (the Qwen2
 tokenizer has no padding side of its own in transformers 4.39.3, and right
 padding breaks batched generation). They need transformers 4.46.3: their
 tokenizer.json files were saved by a newer `tokenizers` than 4.39.3's.
+
+FIFTH_MODELS are the candidates for a fifth model (DECISIONS.md, "Fifth
+model"), with the paper-era settings from models.py at 20ae39b:
+  Aya-101 (first choice): a 13B mT5 encoder-decoder, "text2text-generation",
+    the bare question (no prompt format), 128 new tokens, bs 8. The pipeline
+    returns only the generated text, so there is nothing to split off.
+    models.py passed no decoding flags; Aya's generation_config sets none, so
+    it was greedy, which do_sample=False, num_beams=1 makes explicit.
+  Llama-2-7B-Chat (fallback): "<s>[INST] {q} [/INST]", bs 4, greedy, split
+    on "[/INST]". models.py set no max_new_tokens, so generation stops at
+    EOS or the model's generation_config max_length; max_new_tokens=None
+    reproduces that. Gated on HF (manual approval by Meta).
 """
 import torch
 from datasets import Dataset
@@ -74,11 +86,33 @@ REPLICATION_MODELS = {
         transformers="4.46.3",  # 4.39.3's tokenizers can't read its tokenizer.json
     ),
 }
-MODELS = {**PAPER_MODELS, **REPLICATION_MODELS}
+FIFTH_MODELS = {
+    "aya": dict(
+        hf_model="CohereLabs/aya-101",  # formerly CohereForAI/aya-101 (redirects)
+        # last commit before the March 2024 runs; weights unchanged since 2024-02-13
+        revision="bb36885b37c25bb1a5f621d324dc861ab92e8ae5",  # 2024-02-20
+        task="text2text-generation",
+        prompt="{}",
+        max_new_tokens=128,
+        bs=8,
+        splits=None,
+    ),
+    "llama2": dict(
+        hf_model="meta-llama/Llama-2-7b-chat-hf",
+        # HEAD as of 2026-11-08 (last modified 2024-04-17); the commit list is
+        # gated, so pin the last pre-March-2024 commit once access is granted.
+        revision="f5db02db724555f92da89c216ac04704f23d4590",
+        prompt="<s>[INST] {} [/INST]",
+        max_new_tokens=None,
+        bs=4,
+        splits=["[/INST]"],
+    ),
+}
+MODELS = {**PAPER_MODELS, **REPLICATION_MODELS, **FIFTH_MODELS}
 
 
-def load_model(model_path, padding_side=None):
-    pipe = pipeline("text-generation", model=model_path,
+def load_model(model_path, padding_side=None, task="text-generation"):
+    pipe = pipeline(task, model=model_path,
                     torch_dtype=torch.bfloat16, device_map="auto")
     if padding_side:  # REPLICATION_MODELS; the paper models keep the tokenizer's
         pipe.tokenizer.padding_side = padding_side
@@ -89,6 +123,8 @@ def load_model(model_path, padding_side=None):
 
 
 def split_answer(text, splits):
+    if splits is None:  # text2text-generation returns only the answer
+        return text
     for s in splits[:-1]:
         if s in text:
             return text.split(s)[1]
@@ -100,8 +136,10 @@ def ask(pipe, cfg, questions, bs):
     # A plain column, not dataset.map: mapping a function that closes over the
     # pipeline makes datasets pickle the whole model to fingerprint it.
     ds = Dataset.from_dict({"question": [cfg["prompt"].format(q) for q in questions]})
-    out = pipe(KeyDataset(ds, "question"), batch_size=bs,
-               max_new_tokens=cfg["max_new_tokens"], do_sample=False, num_beams=1,
+    # Llama-2: no max_new_tokens at all, as in models.py (None would still be
+    # passed on to generate)
+    cap = {} if cfg["max_new_tokens"] is None else {"max_new_tokens": cfg["max_new_tokens"]}
+    out = pipe(KeyDataset(ds, "question"), batch_size=bs, **cap, do_sample=False, num_beams=1,
                # what generate() falls back to anyway; passing it avoids a
                # warning per batch
                pad_token_id=pipe.tokenizer.pad_token_id, **cfg.get("generate_kwargs", {}))
