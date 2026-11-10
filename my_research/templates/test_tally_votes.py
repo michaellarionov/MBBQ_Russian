@@ -25,3 +25,21 @@ def test_fleiss_kappa_wikipedia_example():
 
 def test_fleiss_kappa_perfect_agreement():
     assert fleiss_kappa([Counter({YES: 3}), Counter({NO: 3})]) == pytest.approx(1.0)
+
+
+def test_write_vote_keep_keeps_crlf_and_multiline_cells(tmp_path, monkeypatch):
+    # Some worksheets end records with \r\n and hold \n inside quoted cells;
+    # writing vote_keep must leave both as they were.
+    import tally_votes as t
+    head = "category,q_id,ambig_ctx,vote_keep\r\n"
+    files = {}
+    for cat in t.CATS:
+        text = head + f'{cat},1,"line one\nline two",\r\n'
+        (tmp_path / f"worksheet_{cat}_ru.csv").write_bytes(text.encode())
+        files[cat] = text
+    monkeypatch.setattr(t, "HERE", tmp_path)
+    t.write_vote_keep({(cat, 1): cat != "SES" for cat in t.CATS})
+    for cat in t.CATS:
+        got = (tmp_path / f"worksheet_{cat}_ru.csv").read_bytes().decode()
+        want = files[cat].replace('two",\r\n', f'two",{"no" if cat == "SES" else "yes"}\r\n')
+        assert got == want

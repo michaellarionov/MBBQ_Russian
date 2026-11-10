@@ -82,7 +82,8 @@ def write_vote_keep(verdict):
     """Set vote_keep in every worksheet row; verdict: {(category, q_id): bool}."""
     for cat in CATS:
         path = HERE / f"worksheet_{cat}_ru.csv"
-        raw = path.read_text(encoding="utf-8")
+        with open(path, encoding="utf-8", newline="") as f:  # keep \r\n visible
+            raw = f.read()
         rows = list(csv.reader(io.StringIO(raw, newline="")))
         col = rows[0].index("vote_keep")
         cat_i, q_i = rows[0].index("category"), rows[0].index("q_id")
@@ -90,7 +91,8 @@ def write_vote_keep(verdict):
             r[col] = "yes" if verdict[(r[cat_i], int(r[q_i]))] else "no"
         out = io.StringIO(newline="")
         csv.writer(out, lineterminator="\r\n" if "\r\n" in raw else "\n").writerows(rows)
-        path.write_text(out.getvalue(), encoding="utf-8")
+        with open(path, "w", encoding="utf-8", newline="") as f:
+            f.write(out.getvalue())
 
 
 def main():

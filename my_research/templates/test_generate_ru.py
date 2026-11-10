@@ -69,3 +69,23 @@ def test_name_picker_balanced_and_never_repeats_in_a_pair():
         assert a != b
         use.update([a, b])
     assert max(use.values()) - min(use.values()) <= 2
+
+
+def test_vote_keep_is_applied_only_on_request(tmp_path, monkeypatch):
+    # All templates by default (the runs and the gender study use them all);
+    # --apply_vote leaves out vote_keep=no rows.
+    from pathlib import Path
+
+    import generate_ru as g
+    rows = [dict(r) for c in g.CATS for r in g.read_csv(g.HERE / f"worksheet_{c}_ru.csv")]
+    gi = next(r for r in rows if r["category"] == "Gender_identity" and r["variant"].strip() == "")
+    gi["vote_keep"] = "no"
+    real_read = g.read_csv
+    monkeypatch.setattr(g, "read_csv", lambda path: [r for r in rows if r["category"] ==
+                                                     Path(path).stem[len("worksheet_"):-len("_ru")]]
+                        if Path(path).name.startswith("worksheet_") else real_read(path))
+    q = int(gi["q_id"])
+    every, _ = g.load_templates(g.Problems())
+    kept, _ = g.load_templates(g.Problems(), apply_vote=True)
+    assert "" in every["Gender_identity"][q]
+    assert q not in kept["Gender_identity"] or "" not in kept["Gender_identity"][q]

@@ -915,6 +915,235 @@ tlite,descriptive,fem,main,Acc_D gold man: diff,-0.07777777777777778
 tlite,descriptive,fem,main,Acc_D gold man: items a>b,2.0
 tlite,descriptive,fem,main,Acc_D gold man: items a<b,9.0
 tlite,descriptive,fem,main,Acc_D gold man: p sign test,0.0654296875
+aya,set,main,,ambig rows,360.0
+aya,set,main,,ambig undetected,0.0
+aya,set,main,,share woman,0.37222222222222223
+aya,set,main,,share man,0.37777777777777777
+aya,set,main,,share unknown,0.25
+aya,set,main,,Acc_A,0.2588235294117647
+aya,set,main,,Bias_A pub,0.03529411764705882
+aya,set,main,,Bias_A corr,0.2882352941176471
+aya,set,main,,Acc_D,0.8823529411764706
+aya,set,main,,Acc_D gold woman,0.9
+aya,set,main,,Acc_D gold man,0.8666666666666667
+aya,set,masc,,ambig rows,360.0
+aya,set,masc,,ambig undetected,0.0
+aya,set,masc,,share woman,0.37777777777777777
+aya,set,masc,,share man,0.41388888888888886
+aya,set,masc,,share unknown,0.20833333333333334
+aya,set,masc,,Acc_A,0.21764705882352936
+aya,set,masc,,Bias_A pub,0.07058823529411763
+aya,set,masc,,Bias_A corr,0.3088235294117647
+aya,set,masc,,Acc_D,0.9058823529411765
+aya,set,masc,,Acc_D gold woman,0.9166666666666666
+aya,set,masc,,Acc_D gold man,0.8944444444444445
+aya,set,fem,,ambig rows,360.0
+aya,set,fem,,ambig undetected,0.0
+aya,set,fem,,share woman,0.6666666666666666
+aya,set,fem,,share man,0.14166666666666666
+aya,set,fem,,share unknown,0.19166666666666668
+aya,set,fem,,Acc_A,0.19705882352941173
+aya,set,fem,,Bias_A pub,0.2794117647058824
+aya,set,fem,,Bias_A corr,0.11176470588235295
+aya,set,fem,,Acc_D,0.8147058823529413
+aya,set,fem,,Acc_D gold woman,0.9055555555555556
+aya,set,fem,,Acc_D gold man,0.7277777777777777
+aya,set,masc_rerun,,ambig rows,360.0
+aya,set,masc_rerun,,ambig undetected,0.0
+aya,set,masc_rerun,,share woman,0.37777777777777777
+aya,set,masc_rerun,,share man,0.41388888888888886
+aya,set,masc_rerun,,share unknown,0.20833333333333334
+aya,set,masc_rerun,,Acc_A,0.21764705882352936
+aya,set,masc_rerun,,Bias_A pub,0.07058823529411763
+aya,set,masc_rerun,,Bias_A corr,0.3088235294117647
+aya,set,masc_rerun,,Acc_D,0.9058823529411765
+aya,set,masc_rerun,,Acc_D gold woman,0.9166666666666666
+aya,set,masc_rerun,,Acc_D gold man,0.8944444444444445
+aya,set,masc_batch,,ambig rows,360.0
+aya,set,masc_batch,,ambig undetected,0.0
+aya,set,masc_batch,,share woman,0.37777777777777777
+aya,set,masc_batch,,share man,0.4083333333333333
+aya,set,masc_batch,,share unknown,0.21388888888888888
+aya,set,masc_batch,,Acc_A,0.22058823529411764
+aya,set,masc_batch,,Bias_A pub,0.058823529411764705
+aya,set,masc_batch,,Bias_A corr,0.2970588235294118
+aya,set,masc_batch,,Acc_D,0.9073529411764706
+aya,set,masc_batch,,Acc_D gold woman,0.9166666666666666
+aya,set,masc_batch,,Acc_D gold man,0.8944444444444445
+aya,primary,fem,masc,paired rows,720.0
+aya,primary,fem,masc,both detected,720.0
+aya,primary,fem,masc,answer changed,0.23333333333333334
+aya,primary,fem,masc,woman: rows a only,108.0
+aya,primary,fem,masc,woman: rows b only,4.0
+aya,primary,fem,masc,woman: items a>b,41.0
+aya,primary,fem,masc,woman: items a<b,3.0
+aya,primary,fem,masc,woman: p sign test,1.6183321349672042e-09
+aya,primary,fem,masc,woman: templates a>b,15.0
+aya,primary,fem,masc,woman: templates a<b,0.0
+aya,primary,fem,masc,woman: p Wilcoxon,0.0006434854148379289
+aya,primary,fem,masc,woman: share diff,0.28888888888888886
+aya,primary,fem,masc,man: rows a only,4.0
+aya,primary,fem,masc,man: rows b only,102.0
+aya,primary,fem,masc,man: items a>b,3.0
+aya,primary,fem,masc,man: items a<b,37.0
+aya,primary,fem,masc,man: p sign test,1.946500560734421e-08
+aya,primary,fem,masc,man: templates a>b,0.0
+aya,primary,fem,masc,man: templates a<b,15.0
+aya,primary,fem,masc,man: p Wilcoxon,0.0006418578334382445
+aya,primary,fem,masc,man: share diff,-0.2722222222222222
+aya,primary,fem,masc,Acc_D gold woman: diff,-0.011111111111111112
+aya,primary,fem,masc,Acc_D gold woman: items a>b,3.0
+aya,primary,fem,masc,Acc_D gold woman: items a<b,3.0
+aya,primary,fem,masc,Acc_D gold woman: p sign test,1.0
+aya,primary,fem,masc,Acc_D gold man: diff,-0.16666666666666666
+aya,primary,fem,masc,Acc_D gold man: items a>b,1.0
+aya,primary,fem,masc,Acc_D gold man: items a<b,10.0
+aya,primary,fem,masc,Acc_D gold man: p sign test,0.01171875
+aya,noise floor,masc_rerun,masc,paired rows,720.0
+aya,noise floor,masc_rerun,masc,both detected,720.0
+aya,noise floor,masc_rerun,masc,answer changed,0.0
+aya,noise floor,masc_rerun,masc,woman: rows a only,0.0
+aya,noise floor,masc_rerun,masc,woman: rows b only,0.0
+aya,noise floor,masc_rerun,masc,woman: items a>b,0.0
+aya,noise floor,masc_rerun,masc,woman: items a<b,0.0
+aya,noise floor,masc_rerun,masc,woman: p sign test,1.0
+aya,noise floor,masc_rerun,masc,woman: templates a>b,0.0
+aya,noise floor,masc_rerun,masc,woman: templates a<b,0.0
+aya,noise floor,masc_rerun,masc,woman: p Wilcoxon,1.0
+aya,noise floor,masc_rerun,masc,woman: share diff,0.0
+aya,noise floor,masc_rerun,masc,man: rows a only,0.0
+aya,noise floor,masc_rerun,masc,man: rows b only,0.0
+aya,noise floor,masc_rerun,masc,man: items a>b,0.0
+aya,noise floor,masc_rerun,masc,man: items a<b,0.0
+aya,noise floor,masc_rerun,masc,man: p sign test,1.0
+aya,noise floor,masc_rerun,masc,man: templates a>b,0.0
+aya,noise floor,masc_rerun,masc,man: templates a<b,0.0
+aya,noise floor,masc_rerun,masc,man: p Wilcoxon,1.0
+aya,noise floor,masc_rerun,masc,man: share diff,0.0
+aya,noise floor,masc_rerun,masc,Acc_D gold woman: diff,0.0
+aya,noise floor,masc_rerun,masc,Acc_D gold woman: items a>b,0.0
+aya,noise floor,masc_rerun,masc,Acc_D gold woman: items a<b,0.0
+aya,noise floor,masc_rerun,masc,Acc_D gold woman: p sign test,1.0
+aya,noise floor,masc_rerun,masc,Acc_D gold man: diff,0.0
+aya,noise floor,masc_rerun,masc,Acc_D gold man: items a>b,0.0
+aya,noise floor,masc_rerun,masc,Acc_D gold man: items a<b,0.0
+aya,noise floor,masc_rerun,masc,Acc_D gold man: p sign test,1.0
+aya,noise floor (batch size),masc_batch,masc,paired rows,720.0
+aya,noise floor (batch size),masc_batch,masc,both detected,720.0
+aya,noise floor (batch size),masc_batch,masc,answer changed,0.015277777777777777
+aya,noise floor (batch size),masc_batch,masc,woman: rows a only,3.0
+aya,noise floor (batch size),masc_batch,masc,woman: rows b only,3.0
+aya,noise floor (batch size),masc_batch,masc,woman: items a>b,3.0
+aya,noise floor (batch size),masc_batch,masc,woman: items a<b,3.0
+aya,noise floor (batch size),masc_batch,masc,woman: p sign test,1.0
+aya,noise floor (batch size),masc_batch,masc,woman: templates a>b,2.0
+aya,noise floor (batch size),masc_batch,masc,woman: templates a<b,2.0
+aya,noise floor (batch size),masc_batch,masc,woman: p Wilcoxon,1.0
+aya,noise floor (batch size),masc_batch,masc,woman: share diff,0.0
+aya,noise floor (batch size),masc_batch,masc,man: rows a only,2.0
+aya,noise floor (batch size),masc_batch,masc,man: rows b only,4.0
+aya,noise floor (batch size),masc_batch,masc,man: items a>b,2.0
+aya,noise floor (batch size),masc_batch,masc,man: items a<b,4.0
+aya,noise floor (batch size),masc_batch,masc,man: p sign test,0.6875
+aya,noise floor (batch size),masc_batch,masc,man: templates a>b,1.0
+aya,noise floor (batch size),masc_batch,masc,man: templates a<b,3.0
+aya,noise floor (batch size),masc_batch,masc,man: p Wilcoxon,0.625
+aya,noise floor (batch size),masc_batch,masc,man: share diff,-0.005555555555555536
+aya,noise floor (batch size),masc_batch,masc,Acc_D gold woman: diff,0.0
+aya,noise floor (batch size),masc_batch,masc,Acc_D gold woman: items a>b,1.0
+aya,noise floor (batch size),masc_batch,masc,Acc_D gold woman: items a<b,1.0
+aya,noise floor (batch size),masc_batch,masc,Acc_D gold woman: p sign test,1.0
+aya,noise floor (batch size),masc_batch,masc,Acc_D gold man: diff,0.0
+aya,noise floor (batch size),masc_batch,masc,Acc_D gold man: items a>b,0.0
+aya,noise floor (batch size),masc_batch,masc,Acc_D gold man: items a<b,0.0
+aya,noise floor (batch size),masc_batch,masc,Acc_D gold man: p sign test,1.0
+aya,secondary,fem,masc_rerun,paired rows,720.0
+aya,secondary,fem,masc_rerun,both detected,720.0
+aya,secondary,fem,masc_rerun,answer changed,0.23333333333333334
+aya,secondary,fem,masc_rerun,woman: rows a only,108.0
+aya,secondary,fem,masc_rerun,woman: rows b only,4.0
+aya,secondary,fem,masc_rerun,woman: items a>b,41.0
+aya,secondary,fem,masc_rerun,woman: items a<b,3.0
+aya,secondary,fem,masc_rerun,woman: p sign test,1.6183321349672042e-09
+aya,secondary,fem,masc_rerun,woman: templates a>b,15.0
+aya,secondary,fem,masc_rerun,woman: templates a<b,0.0
+aya,secondary,fem,masc_rerun,woman: p Wilcoxon,0.0006434854148379289
+aya,secondary,fem,masc_rerun,woman: share diff,0.28888888888888886
+aya,secondary,fem,masc_rerun,man: rows a only,4.0
+aya,secondary,fem,masc_rerun,man: rows b only,102.0
+aya,secondary,fem,masc_rerun,man: items a>b,3.0
+aya,secondary,fem,masc_rerun,man: items a<b,37.0
+aya,secondary,fem,masc_rerun,man: p sign test,1.946500560734421e-08
+aya,secondary,fem,masc_rerun,man: templates a>b,0.0
+aya,secondary,fem,masc_rerun,man: templates a<b,15.0
+aya,secondary,fem,masc_rerun,man: p Wilcoxon,0.0006418578334382445
+aya,secondary,fem,masc_rerun,man: share diff,-0.2722222222222222
+aya,secondary,fem,masc_rerun,Acc_D gold woman: diff,-0.011111111111111112
+aya,secondary,fem,masc_rerun,Acc_D gold woman: items a>b,3.0
+aya,secondary,fem,masc_rerun,Acc_D gold woman: items a<b,3.0
+aya,secondary,fem,masc_rerun,Acc_D gold woman: p sign test,1.0
+aya,secondary,fem,masc_rerun,Acc_D gold man: diff,-0.16666666666666666
+aya,secondary,fem,masc_rerun,Acc_D gold man: items a>b,1.0
+aya,secondary,fem,masc_rerun,Acc_D gold man: items a<b,10.0
+aya,secondary,fem,masc_rerun,Acc_D gold man: p sign test,0.01171875
+aya,descriptive,masc,main,paired rows,720.0
+aya,descriptive,masc,main,both detected,720.0
+aya,descriptive,masc,main,answer changed,0.08888888888888889
+aya,descriptive,masc,main,woman: rows a only,16.0
+aya,descriptive,masc,main,woman: rows b only,14.0
+aya,descriptive,masc,main,woman: items a>b,8.0
+aya,descriptive,masc,main,woman: items a<b,10.0
+aya,descriptive,masc,main,woman: p sign test,0.8145294189453125
+aya,descriptive,masc,main,woman: templates a>b,5.0
+aya,descriptive,masc,main,woman: templates a<b,6.0
+aya,descriptive,masc,main,woman: p Wilcoxon,0.9970703125
+aya,descriptive,masc,main,woman: share diff,0.005555555555555536
+aya,descriptive,masc,main,man: rows a only,25.0
+aya,descriptive,masc,main,man: rows b only,12.0
+aya,descriptive,masc,main,man: items a>b,16.0
+aya,descriptive,masc,main,man: items a<b,9.0
+aya,descriptive,masc,main,man: p sign test,0.2295229434967041
+aya,descriptive,masc,main,man: templates a>b,8.0
+aya,descriptive,masc,main,man: templates a<b,5.0
+aya,descriptive,masc,main,man: p Wilcoxon,0.26611328125
+aya,descriptive,masc,main,man: share diff,0.036111111111111094
+aya,descriptive,masc,main,Acc_D gold woman: diff,0.016666666666666666
+aya,descriptive,masc,main,Acc_D gold woman: items a>b,3.0
+aya,descriptive,masc,main,Acc_D gold woman: items a<b,1.0
+aya,descriptive,masc,main,Acc_D gold woman: p sign test,0.625
+aya,descriptive,masc,main,Acc_D gold man: diff,0.027777777777777776
+aya,descriptive,masc,main,Acc_D gold man: items a>b,3.0
+aya,descriptive,masc,main,Acc_D gold man: items a<b,1.0
+aya,descriptive,masc,main,Acc_D gold man: p sign test,0.625
+aya,descriptive,fem,main,paired rows,720.0
+aya,descriptive,fem,main,both detected,720.0
+aya,descriptive,fem,main,answer changed,0.25555555555555554
+aya,descriptive,fem,main,woman: rows a only,114.0
+aya,descriptive,fem,main,woman: rows b only,8.0
+aya,descriptive,fem,main,woman: items a>b,45.0
+aya,descriptive,fem,main,woman: items a<b,5.0
+aya,descriptive,fem,main,woman: p sign test,4.209852022540872e-09
+aya,descriptive,fem,main,woman: templates a>b,14.0
+aya,descriptive,fem,main,woman: templates a<b,0.0
+aya,descriptive,fem,main,woman: p Wilcoxon,0.0009674284502477448
+aya,descriptive,fem,main,woman: share diff,0.2944444444444444
+aya,descriptive,fem,main,man: rows a only,10.0
+aya,descriptive,fem,main,man: rows b only,95.0
+aya,descriptive,fem,main,man: items a>b,6.0
+aya,descriptive,fem,main,man: items a<b,39.0
+aya,descriptive,fem,main,man: p sign test,5.417768988991156e-07
+aya,descriptive,fem,main,man: templates a>b,2.0
+aya,descriptive,fem,main,man: templates a<b,14.0
+aya,descriptive,fem,main,man: p Wilcoxon,0.0008303186686285189
+aya,descriptive,fem,main,man: share diff,-0.2361111111111111
+aya,descriptive,fem,main,Acc_D gold woman: diff,0.005555555555555556
+aya,descriptive,fem,main,Acc_D gold woman: items a>b,3.0
+aya,descriptive,fem,main,Acc_D gold woman: items a<b,3.0
+aya,descriptive,fem,main,Acc_D gold woman: p sign test,1.0
+aya,descriptive,fem,main,Acc_D gold man: diff,-0.1388888888888889
+aya,descriptive,fem,main,Acc_D gold man: items a>b,1.0
+aya,descriptive,fem,main,Acc_D gold man: items a<b,11.0
+aya,descriptive,fem,main,Acc_D gold man: p sign test,0.00634765625
 mistral,primary,fem,masc,woman: Holm p,0.359130859375
 mistral,primary,fem,masc,man: Holm p,0.359130859375
 zephyr,primary,fem,masc,woman: Holm p,7.326173090405064e-06
@@ -923,3 +1152,5 @@ qwen,primary,fem,masc,woman: Holm p,0.0625
 qwen,primary,fem,masc,man: Holm p,1.0
 tlite,primary,fem,masc,woman: Holm p,0.064453125
 tlite,primary,fem,masc,man: Holm p,1.0
+aya,primary,fem,masc,woman: Holm p,3.2366642699344084e-09
+aya,primary,fem,masc,man: Holm p,1.946500560734421e-08

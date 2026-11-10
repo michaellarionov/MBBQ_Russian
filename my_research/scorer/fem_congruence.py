@@ -25,7 +25,7 @@ from scipy.stats import wilcoxon
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from fem_analysis import (DATA_FILE, KEY, MODELS, classify, fmt_p, option_genders,  # noqa: E402
+from fem_analysis import (DATA_FILE, KEY, MODELS, classify, fmt_p, option_genders, settle_lone_v,  # noqa: E402
                           sign_test)
 from mbbq_scorer import NO_TARGET, flip_target_loc  # noqa: E402
 from score_both_signs import Outputs  # noqa: E402
@@ -63,7 +63,7 @@ def load(results):
         same_q = {e for e, q in q_fem.items() if q == q_masc[e]}
         for model in MODELS:
             for s in SETS:
-                raw = outputs.get(model, "ru", s)
+                raw = settle_lone_v(model, outputs.get(model, "ru", s))
                 if raw is None:
                     continue
                 genders = option_genders(data / DATA_FILE[s])

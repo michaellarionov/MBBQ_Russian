@@ -41,9 +41,38 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from mbbq_scorer import annotate, score  # noqa: E402
 from score_both_signs import Outputs  # noqa: E402
 
-MODELS = ["mistral", "zephyr", "qwen", "tlite"]
-# Holm families (DECISIONS.md): the first two models, then the replication.
-FAMILIES = [("mistral", "zephyr"), ("qwen", "tlite")]
+# aya: supplementary, added after failing the fifth-model rule (DECISIONS.md,
+# "Fifth model", amendment 2026-11-10). Kept last: the bootstrap scripts draw
+# from one random stream across models, so the main models' numbers don't move.
+MODELS = ["mistral", "zephyr", "qwen", "tlite", "aya"]
+SUPPLEMENTARY = {"aya"}
+# Holm families (DECISIONS.md): the first two models, then the replication,
+# then Aya on its own.
+FAMILIES = [("mistral", "zephyr"), ("qwen", "tlite"), ("aya",)]
+# A lone Cyrillic «В» stays undetected (it could be Latin B or the third
+# Cyrillic letter, C). For the Aya sensitivity analysis only, recode_lone_v
+# reads it as one of them; nothing else uses it.
+LONE_V = {"(В).", "В."}
+
+
+def recode_lone_v(df, letter):
+    """Undetected answers that are exactly a lone «В» read as `letter` (1 = B, 2 = C)."""
+    hit = df["answer_detected"].isna() & df["answer"].astype(str).str.strip().isin(LONE_V)
+    return df.assign(answer_detected=df["answer_detected"].mask(hit, float(letter))), int(hit.sum())
+
+
+# Settled reading of a lone «В» per model (DECISIONS.md, "Fifth model",
+# amendment "settling the «В» reading", 2026-11-10): Aya writes Cyrillic
+# letters in alphabet order (26 lone «Б», 0 lone Cyrillic «С»), so «В» = C.
+# Its primary analysis uses this; aya_sensitivity.py keeps all three readings.
+LONE_V_READING = {"aya": 2}
+
+
+def settle_lone_v(model, df):
+    """df with the model's settled «В» reading applied (unchanged for other models)."""
+    if df is None or model not in LONE_V_READING:
+        return df
+    return recode_lone_v(df, LONE_V_READING[model])[0]
 
 SETS = ["main", "masc", "fem", "masc_rerun", "masc_batch"]
 DATA_FILE = {"main": "Gender_identity_ru.jsonl", "masc": "Gender_identity_ru_masc.jsonl",
@@ -161,7 +190,7 @@ def main():
         sets = {}
         for model in MODELS:
             for s in SETS:
-                raw = outputs.get(model, "ru", s)
+                raw = settle_lone_v(model, outputs.get(model, "ru", s))
                 if raw is not None:
                     raw = raw[raw["subset"] == "Gender_identity"]
                     sets[(model, s)] = classify(raw, option_genders(data / DATA_FILE[s]))
@@ -236,7 +265,8 @@ def main():
         lines += ["", "H2 is tested as fem vs. masc «man» answers: a < b supports it.", ""]
         for model in [m for m in MODELS if any(v[0] == m for v in verdicts)]:
             both = all(ok for m, ok in verdicts if m == model)
-            lines.append(f"- {model}: {'both hypotheses hold' if both else 'not both hypotheses hold'}")
+            note = " (supplementary: DECISIONS.md, \"Fifth model\", amendment)" if model in SUPPLEMENTARY else ""
+            lines.append(f"- {model}: {'both hypotheses hold' if both else 'not both hypotheses hold'}{note}")
         lines.append("")
     lines += ["## Notes", ""]
     lines += [f"- Re-detected `{n}`: undetected {x} → {y}, {c} rows changed"

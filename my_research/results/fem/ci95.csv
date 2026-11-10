@@ -11,3 +11,6 @@ qwen,rerun vs masc,360,17,0.0,0.0,0.0
 tlite,masc vs neutral,359,17,0.6,-0.6,2.1
 tlite,fem vs masc,360,17,-5.0,-11.2,-0.3
 tlite,rerun vs masc,360,17,0.0,0.0,0.0
+aya,masc vs neutral,360,17,3.1,-5.9,13.2
+aya,fem vs masc,360,17,-56.1,-72.9,-39.7
+aya,rerun vs masc,360,17,0.0,0.0,0.0

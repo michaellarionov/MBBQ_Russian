@@ -6,8 +6,13 @@ the English sample's answer order, label, tags, polarity and example_id. The
 Russian data stays parallel to English item by item, and mbbq.py and the
 scorer work unchanged (tags stay English).
 
-Templates: ru_templates.csv if it exists (the rows kept after the vote),
-otherwise the six worksheet_<Cat>_ru.csv files, minus rows with vote_keep=no.
+Templates: ru_templates.csv if it exists, otherwise the six
+worksheet_<Cat>_ru.csv files. All 98 templates by default, whatever the
+stereotype vote decided: every model run used them all, the gender study uses
+all 17 of its templates regardless of the vote (DECISIONS.md, "The gender study
+and the stereotype vote"), and the bias scores drop rejected templates in the
+scorer. --apply_vote leaves out rows with vote_keep=no (the final data/
+release).
 Template row per sample (DECISIONS.md, "Slots and lexicon values"):
 - control set: the `control` row if the template has one;
 - BBQ version b: the `b` row if the template has one;
@@ -30,6 +35,7 @@ Usage (from the fork root):
   python my_research/templates/generate_ru.py --check   # list every problem, write nothing
   python my_research/templates/generate_ru.py           # write data/<Cat>[_control]_ru.jsonl
   python my_research/templates/generate_ru.py --category Age --category SES
+  python my_research/templates/generate_ru.py --apply_vote   # the kept templates only
 A file is written only if all its samples generate without problems.
 """
 import argparse
@@ -126,8 +132,9 @@ class Problems:
                 print(f"  {msg}" + (f"  [{n} samples]" if n > 1 else ""))
 
 
-def load_templates(problems):
-    """{category: {q_id: {variant: row}}} and the source used."""
+def load_templates(problems, apply_vote=False):
+    """{category: {q_id: {variant: row}}} and the source used. Rows with
+    vote_keep=no are left out only with apply_vote."""
     path = HERE / "ru_templates.csv"
     if path.exists():
         rows, source = read_csv(path), path.name
@@ -137,7 +144,7 @@ def load_templates(problems):
             rows += read_csv(HERE / f"worksheet_{cat}_ru.csv")
     out = defaultdict(lambda: defaultdict(dict))
     for r in rows:
-        if r.get("vote_keep", "").strip().lower() == "no":
+        if apply_vote and r.get("vote_keep", "").strip().lower() == "no":
             continue
         cat, q, variant = r["category"], int(r["q_id"]), r["variant"].strip()
         where = f"{cat} q{q}" + (f" ({variant})" if variant else "")
@@ -449,12 +456,14 @@ def main():
     ap.add_argument("--check", action="store_true", help="report problems, write nothing")
     ap.add_argument("--data", default=ROOT / "data", help="folder with the English jsonl")
     ap.add_argument("--out", default=ROOT / "data", help="folder for the Russian jsonl")
+    ap.add_argument("--apply_vote", action="store_true",
+                    help="leave out templates with vote_keep=no (default: all templates)")
     args = ap.parse_args()
     problems = Problems()
-    templates, source = load_templates(problems)
+    templates, source = load_templates(problems, args.apply_vote)
     lex = Lexicon(HERE / "ru_lexicon.csv")
     unknowns = {r["en"]: r["ru"].strip() for r in read_csv(HERE / "ru_unknowns.csv")}
-    print(f"Templates: {source}")
+    print(f"Templates: {source}" + (", vote applied" if args.apply_vote else ", all (vote not applied)"))
     for cat in args.category or CATS:
         kinds = ["main", "control"] + (list(LEAK_KINDS) if cat == "Gender_identity" else [])
         for kind in kinds:

@@ -68,9 +68,12 @@ def main():
         out = Outputs(root / "my_research/results", root / "data", data)
 
         for m in F.MODELS:
+            if any(out.get(m, "ru", s) is None for s in ["main", "masc", "fem", "masc_rerun"]):
+                print(f"{m}: pickle(s) missing, skipped")
+                continue
             sets = {}
             for s in ["main", "masc", "fem", "masc_rerun"]:
-                raw = out.get(m, "ru", s)
+                raw = F.settle_lone_v(m, out.get(m, "ru", s))
                 raw = raw[raw.subset == "Gender_identity"]
                 sets[s] = F.classify(raw, F.option_genders(data / F.DATA_FILE[s]))
             # restrict every set to the 144 items shared with fem

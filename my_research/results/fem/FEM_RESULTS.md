@@ -83,6 +83,25 @@ ambiguous answers.
 | masc vs. main | descriptive | 5.6% | 2 / 1, 1 | 2 / 0, 0.5 | 1 / 0, 1 | -0.034, 0.69 | -0.006, 1 |
 | fem vs. main | descriptive | 9.2% | 8 / 0, 0.0078 | 1 / 1, 1 | 4 / 0, 0.12 | +0.011, 0.75 | -0.078, 0.065 |
 
+## Aya (144 items, 720 rows per set)
+
+| Set | Undetected | Woman | Man | Unknown | Acc_A | Bias_A pub | Bias_A corr | Acc_D | Acc_D gold woman | Acc_D gold man |
+|---|---|---|---|---|---|---|---|---|---|---|
+| main | 0 | 0.372 | 0.378 | 0.250 | 0.259 | 0.0353 | 0.2882 | 0.882 | 0.900 | 0.867 |
+| masc | 0 | 0.378 | 0.414 | 0.208 | 0.218 | 0.0706 | 0.3088 | 0.906 | 0.917 | 0.894 |
+| fem | 0 | 0.667 | 0.142 | 0.192 | 0.197 | 0.2794 | 0.1118 | 0.815 | 0.906 | 0.728 |
+| masc_rerun | 0 | 0.378 | 0.414 | 0.208 | 0.218 | 0.0706 | 0.3088 | 0.906 | 0.917 | 0.894 |
+| masc_batch | 0 | 0.378 | 0.408 | 0.214 | 0.221 | 0.0588 | 0.2971 | 0.907 | 0.917 | 0.894 |
+
+| a vs. b | Role | Answers changed | «Woman»: items a>b / a<b, p | «Man»: items a>b / a<b, p | Templates «woman» a>b / a<b, Wilcoxon p | Acc_D gold woman: diff, p | Acc_D gold man: diff, p |
+|---|---|---|---|---|---|---|---|
+| fem vs. masc | primary | 23.3% | 41 / 3, 1.6e-09 | 3 / 37, 1.9e-08 | 15 / 0, 6.4e-04 | -0.011, 1 | -0.167, 0.012 |
+| masc_rerun vs. masc | noise floor | 0.0% | 0 / 0, 1 | 0 / 0, 1 | 0 / 0, 1 | +0.000, 1 | +0.000, 1 |
+| masc_batch vs. masc | noise floor (batch size) | 1.5% | 3 / 3, 1 | 2 / 4, 0.69 | 2 / 2, 1 | +0.000, 1 | +0.000, 1 |
+| fem vs. masc_rerun | secondary | 23.3% | 41 / 3, 1.6e-09 | 3 / 37, 1.9e-08 | 15 / 0, 6.4e-04 | -0.011, 1 | -0.167, 0.012 |
+| masc vs. main | descriptive | 8.9% | 8 / 10, 0.81 | 16 / 9, 0.23 | 5 / 6, 1 | +0.017, 0.62 | +0.028, 0.62 |
+| fem vs. main | descriptive | 25.6% | 45 / 5, 4.2e-09 | 6 / 39, 5.4e-07 | 14 / 0, 9.7e-04 | +0.006, 1 | -0.139, 0.0063 |
+
 ## Primary tests (fem vs. masc, ambiguous, sign test over items)
 
 Holm within each family. A model replicates the effect if H1 and H2 both
@@ -98,6 +117,8 @@ hold at Holm p < 0.05 in the predicted direction.
 | qwen + tlite | qwen | H2: more «man» under masc | yes | 1 | 1 |
 | qwen + tlite | tlite | H1: more «woman» under fem | yes | 0.021 | 0.064 |
 | qwen + tlite | tlite | H2: more «man» under masc | yes | 0.5 | 1 |
+| aya | aya | H1: more «woman» under fem | yes | 1.6e-09 | 3.2e-09 |
+| aya | aya | H2: more «man» under masc | yes | 1.9e-08 | 1.9e-08 |
 
 H2 is tested as fem vs. masc «man» answers: a < b supports it.
 
@@ -105,6 +126,7 @@ H2 is tested as fem vs. masc «man» answers: a < b supports it.
 - zephyr: both hypotheses hold
 - qwen: not both hypotheses hold
 - tlite: not both hypotheses hold
+- aya: both hypotheses hold (supplementary: DECISIONS.md, "Fifth model", amendment)
 
 ## Notes
 
@@ -128,3 +150,8 @@ H2 is tested as fem vs. masc «man» answers: a < b supports it.
 - Re-detected `tlite_ru_fem.pkl`: undetected 0 → 0, 0 rows changed
 - Re-detected `tlite_ru_masc_rerun.pkl`: undetected 0 → 0, 0 rows changed
 - Re-detected `tlite_ru_masc_batch.pkl`: undetected 0 → 0, 0 rows changed
+- Re-detected `aya_ru.pkl`: undetected 547 → 547, 0 rows changed
+- Re-detected `aya_ru_masc.pkl`: undetected 141 → 141, 0 rows changed
+- Re-detected `aya_ru_fem.pkl`: undetected 130 → 130, 0 rows changed
+- Re-detected `aya_ru_masc_rerun.pkl`: undetected 141 → 141, 0 rows changed
+- Re-detected `aya_ru_masc_batch.pkl`: undetected 138 → 138, 0 rows changed
